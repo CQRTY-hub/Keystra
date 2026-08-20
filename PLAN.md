@@ -356,7 +356,10 @@ matching on a name, stop and tell me.
 
 ## Data model
 
-- `Product` — supplier product ID (unique), title, platform, region, price, active flag
+- `Product` — supplier product ID (unique), title, platform, region, price, active flag.
+  No description or image fields yet — those get added in Phase 3 alongside the
+  `GET /v3/products/{productId}/description` + `GET /v3/productImages/{id}` sync, not
+  speculatively now.
 - `Order` — status, customer email, total, Mollie payment ID, timestamps
 - `OrderItem` — links order to product, quantity, unit price
 - `DeliveredKey` — order item, the key value, delivered timestamp, delivery method
@@ -371,6 +374,11 @@ no key yet (their preorder code type). The money is taken, the order is valid, t
 arrives later. This is not an error state and must not be treated as one — the customer
 needs a clear "your key is reserved and will arrive" message, and the order must resolve
 automatically when the code lands.
+
+Resolving it means **polling `GET /v3/codes/{codeId}`** on a schedule, using the `codeId`
+captured from the original `CODE_PREORDER` response — there is no push for this (see Phase
+0.5's postback correction), so nothing "arrives" on its own. Same shape as the catalogue
+sync: a scheduled job, not a webhook handler.
 
 Note: preorder products will be switched off at launch, so this should be rare. Build and
 test the path anyway — a product's availability can change between listing and ordering,
@@ -406,7 +414,10 @@ and an unhandled case here means a paid customer with no key and no explanation.
 ## Pages needed
 
 - Home — featured products
-- Shop — list with filters for platform and region
+- Shop — list with filters for platform and region. Phase 1 derives the filter options from
+  whatever's in the local `Product` table — a placeholder. Phase 3 replaces that with the
+  synced reference data (`GET /v3/platforms`, `/v3/regions`) so the filters can't drift from
+  what the supplier can actually deliver.
 - Product page — title, price, region, platform, redemption instructions, buy button
 - Cart and checkout — email required, terms checkbox
 - Order confirmation — shows the key, plus "we've emailed it to you"
@@ -638,7 +649,22 @@ Gated on Phase 0.5. Nothing in the shop or the design should need to change — 
 whole point of how Phase 1 is structured. Order of work:
 
 1. **Implement `CodesWholesaleProvider` against their sandbox.** Same interface, real calls.
-   The mock stays in the codebase; the environment variable decides which runs.
+   The mock stays in the codebase; the environment variable decides which runs. This step
+   isn't just `checkAvailability`/`orderKey`/`assessRisk` — it also stands up the three
+   scheduled jobs the stub already documents, none of which have a push alternative:
+   - **Catalogue sync** — `GET /v3/products` with `updatedSince`, upserted by
+     `supplierProductId`. Product-page revalidation depends on this running regularly.
+   - **Reference-data sync** — `GET /v3/platforms`, `/v3/regions`, `/v3/territory`,
+     `/v3/languages`, cached locally. This is what the shop's platform and region filters
+     should be built from once it exists, not the hardcoded/derived-from-`Product` list
+     Phase 1 uses as a placeholder.
+   - **`awaiting_code` resolution** — polling `GET /v3/codes/{codeId}` (see Data model).
+   And two per-order calls beyond the sale itself: `GET /v3/orders/{orderId}/invoice`,
+   pulled automatically right after a successful `orderKey()` for my own purchase-side
+   bookkeeping (not the customer-facing invoice — see Phase 3.6), and, once product content
+   sync is worth building, `GET /v3/products/{productId}/description` +
+   `GET /v3/productImages/{id}` — which needs new fields on `Product` first, added then,
+   not speculatively now.
 2. **Beat it up before trusting it.** Run every failure the mock simulated, against the
    sandbox: out of stock mid-order, empty balance, timeout, image-format key, duplicate
    webhook. It's boring when it's finished, and boring is the goal.
@@ -783,6 +809,12 @@ customer.
 On G2A the invoices aren't Belgian-compliant, so every sale gets recreated by hand in
 Accountable. On my own shop I control invoice generation, and that manual work disappears
 entirely. Build it properly and it's the biggest quality-of-life win in this whole project.
+
+**Two different invoices, don't conflate them.** Everything below is the invoice *I issue*
+to the customer — Belgian-compliant, mine to generate. Separately, `CodesWholesaleProvider`
+pulls the *supplier's* invoice per order (`GET /v3/orders/{orderId}/invoice`, Phase 3 step 1)
+— that's purchase-side bookkeeping, what I pay them, and has nothing to do with what the
+customer receives.
 
 **Requirements:**
 - **Sequential invoice numbers with no gaps**, assigned at payment confirmation — not at
