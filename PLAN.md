@@ -184,11 +184,39 @@ credit. There's a low-balance notification when credit drops below a threshold y
 the balance check runs on every fulfilment. Wire that alert to yourself before launch —
 running dry mid-day is a silent outage.
 
-**Postbacks.** You configure a postback URL and receive notifications about product changes:
-new arrivals, products hidden from the price list, and changed details. Use these to keep a
-local product catalogue in sync rather than hitting the API on every page view. Two
-practical notes: there's a postback test tool, and there's a history of hash-encoding
-complaints on their SDK, so verify signatures defensively and log every postback raw.
+**No postbacks in the v3 API — correction.** Earlier notes assumed a postback URL for
+product changes. The published v3 endpoint list contains no webhook or postback endpoint;
+that appears to be a feature of their shop plugins, not the API. **Catalogue sync is
+polling**, exactly as support described: `GET /v3/products` with `updatedSince`, on a
+schedule. Design for that, not for push.
+
+**Endpoints worth using that weren't in the earlier notes:**
+
+- `GET /v3/orders/{orderId}/invoice` — the supplier invoice per order, programmatically.
+  Pull it automatically on every order and file it; that's my purchase-side bookkeeping
+  handled without downloading anything by hand.
+- `GET /v3/codes/{codeId}` — fetch an ordered code separately. This is the retrieval path
+  for a code that wasn't available at order time.
+- `GET /v3/platforms`, `/v3/regions`, `/v3/territory`, `/v3/languages` — reference data.
+  **The shop's platform and region filters should be built from these, cached locally, not
+  hardcoded.** Hardcoding a region list is how you end up selling a region you can't supply.
+- `GET /v3/products/{productId}/description` and `GET /v3/productImages/{id}` — product
+  copy and images for product pages.
+- `GET /v3/orders` — order history, useful for reconciling my records against theirs.
+
+**No complaint endpoint appears in the v3 list**, despite support saying one exists. Follow
+up before building that part.
+
+**Token lifetime is dynamic — read `expires_in`, never hardcode.** Support said 60 minutes,
+but the documentation's own example response shows 1158 seconds, because re-requesting
+returns the existing token with its *remaining* life. Always store the token together with
+the expiry derived from the `expires_in` in that response, and refresh only when it has
+actually passed. A hardcoded 60 minutes will hand you an expired token mid-order.
+
+**Credentials:** the client_id and client_secret in the documentation examples are shared
+demo values. Generate my own at app.codeswholesale.com under the API tab. Sandbox and live
+are separate hosts — `sandbox.codeswholesale.com` and `api.codeswholesale.com` — and both
+go in `.env.local`, never in code.
 
 **Risk scoring is available over the API.** Confirmed by support: `POST /v3/security`
 returns a numeric `riskScore`. Call it before fulfilment and use it to drive the risk-based
@@ -295,7 +323,7 @@ card.
 - Product and shop pages: statically generated with revalidation, not client-fetched.
 - Order confirmation, order lookup, cart and admin are dynamic and must be `noindex`.
   Never cache a page that can contain a key.
-- **Revalidate product pages when the supplier postback says price or stock changed**,
+- **Revalidate product pages after each catalogue sync** (the scheduled `updatedSince` pull),
   rather than relying on a short time-based cache. This is a money issue as much as an SEO
   one: a stale cached price means selling below cost, and stale stock means selling
   something I can't deliver.
