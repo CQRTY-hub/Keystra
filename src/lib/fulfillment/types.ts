@@ -58,8 +58,15 @@ export type KeyResult =
   | {
       status: "awaiting_code";
       codeType: "CODE_PREORDER";
-      /** Link to retrieve the code once it exists. */
-      retrievalUrl: string;
+      /**
+       * The identifier used to retrieve the code once it exists — the
+       * real API is `GET /v3/codes/{codeId}` (PLAN.md, Phase 0.5), not a
+       * URL. Whatever persists an `awaiting_code` order needs to store
+       * this alongside it; there's nowhere that does yet (Phase 1 only
+       * logs the status, not this field — a known gap for whoever builds
+       * the resolution job in Phase 3).
+       */
+      codeId: string;
     }
   | {
       status: "failed";

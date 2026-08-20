@@ -97,7 +97,7 @@ export class MockFulfillmentProvider implements FulfillmentProvider {
         return {
           status: "awaiting_code",
           codeType: "CODE_PREORDER",
-          retrievalUrl: `https://sandbox.codeswholesale.com/mock-retrieval/${orderId}`,
+          codeId: `mock-code-${orderId}`,
         };
 
       case MOCK_SCENARIO_PRODUCT_IDS.faultyKey:

@@ -75,7 +75,7 @@ describe("MockFulfillmentProvider", () => {
     expect(result.status).toBe("awaiting_code");
     if (result.status === "awaiting_code") {
       expect(result.codeType).toBe("CODE_PREORDER");
-      expect(result.retrievalUrl).toContain(orderId);
+      expect(result.codeId).toContain(orderId);
     }
   });
 
