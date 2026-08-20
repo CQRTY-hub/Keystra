@@ -1,0 +1,135 @@
+// Prisma schema for the storefront.
+//
+// Rules that shape this file (see PLAN.md / CLAUDE.md):
+// - Products are identified by supplier product ID, never by title.
+// - Order status is an explicit state machine (see src/lib/order-state-machine.ts).
+//   Never write a status directly; go through that module.
+// - DeliveredKey.value holds the raw key in Phase 1 (mock keys only). Phase 3.8
+//   adds application-level encryption before any real key is ever stored.
+// - EventLog is the append-only audit trail. Every row is written through
+//   src/lib/event-log.ts — nothing writes to this table directly.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// One row. Read/written through src/lib/kill-switch.ts. This is the flag
+// from PLAN.md Phase 1 point 8 — a database flag, not an env var, so
+// stopping sales never requires a deploy.
+model ShopSettings {
+  id               Int      @id @default(1)
+  checkoutEnabled  Boolean  @default(true)
+  checkoutPausedAt DateTime?
+  checkoutPausedBy String?
+  checkoutPauseReason String?
+  updatedAt        DateTime @updatedAt
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  // The supplier's own product ID (UUID from CodesWholesale). Unique,
+  // stable, and what every lookup and every order line is keyed on.
+  // Never match a product by title.
+  supplierProductId String @unique
+  title          String
+  platform       String
+  region         String
+  // Stored in the smallest currency unit (cents) to avoid float rounding.
+  priceCents     Int
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  orderItems     OrderItem[]
+
+  @@index([active])
+}
+
+enum OrderStatus {
+  pending
+  paid
+  fulfilling
+  completed
+  held
+  awaiting_code
+  refunded
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  status          OrderStatus @default(pending)
+  customerEmail   String
+  totalCents      Int
+  molliePaymentId String?     @unique
+
+  // Withdrawal-right waiver (PLAN.md Phase 1 point 6 / Appendix item 1).
+  // A dedicated checkbox, separate from the terms checkbox, unticked by
+  // default. Both the timestamp and the exact wording version shown must
+  // be recorded — set only through src/lib/consent.ts.
+  withdrawalWaiverAcceptedAt DateTime?
+  withdrawalWaiverVersion    String?
+
+  // Terms version accepted at checkout, so a later terms change never
+  // retroactively changes what an existing order was placed under.
+  termsAcceptedAt DateTime?
+  termsVersion    String?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items           OrderItem[]
+  eventLogs       EventLog[]
+
+  @@index([status])
+  @@index([customerEmail])
+}
+
+model OrderItem {
+  id            String   @id @default(uuid())
+  order         Order    @relation(fields: [orderId], references: [id])
+  orderId       String
+  product       Product  @relation(fields: [productId], references: [id])
+  productId     String
+  quantity      Int      @default(1)
+  unitPriceCents Int
+
+  deliveredKeys DeliveredKey[]
+
+  @@index([orderId])
+}
+
+enum DeliveryMethod {
+  text
+  image
+}
+
+model DeliveredKey {
+  id              String         @id @default(uuid())
+  orderItem       OrderItem      @relation(fields: [orderItemId], references: [id])
+  orderItemId     String
+  // Phase 1: plain value (mock keys only, never real ones). Phase 3.8:
+  // application-level encryption before this ever holds a real key.
+  value           String
+  deliveryMethod  DeliveryMethod
+  deliveredAt     DateTime       @default(now())
+
+  @@index([orderItemId])
+}
+
+model EventLog {
+  id        String   @id @default(uuid())
+  order     Order?   @relation(fields: [orderId], references: [id])
+  orderId   String?
+  eventType String
+  // Raw payload as JSON. Never a full key value — see src/lib/event-log.ts.
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([eventType])
+}
