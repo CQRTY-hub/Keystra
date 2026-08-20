@@ -82,35 +82,46 @@ export function CheckoutForm() {
         autoComplete="email"
       />
 
-      <div className="flex items-start gap-2">
-        <input
-          id="terms"
-          type="checkbox"
-          checked={termsAccepted}
-          onChange={(e) => setTermsAccepted(e.target.checked)}
-          className="mt-1"
-        />
-        <label htmlFor="terms" className="text-sm text-slate-900">
+      {/* PLAN.md, "Mobile is the primary device": 44px minimum tap target,
+          especially these two — a consent checkbox that's hard to hit is
+          one people mis-tap. The whole row is the label (clicking the
+          text toggles the box too); the icon wrapper additionally gives
+          the checkbox glyph itself a full 44x44 hit area, not just its
+          visible ~16px square. */}
+      <label htmlFor="terms" className="flex min-h-11 cursor-pointer items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center">
+          <input
+            id="terms"
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="h-5 w-5"
+          />
+        </span>
+        <span className="py-3 text-sm text-slate-900">
           Ik ga akkoord met de{" "}
           <a href="/terms" className="underline" target="_blank" rel="noreferrer">
             algemene voorwaarden
           </a>
           .
-        </label>
-      </div>
+        </span>
+      </label>
 
-      <div className="flex items-start gap-2">
-        <input
-          id="withdrawal-waiver"
-          type="checkbox"
-          checked={waiverAccepted}
-          onChange={(e) => setWaiverAccepted(e.target.checked)}
-          className="mt-1"
-        />
-        <label htmlFor="withdrawal-waiver" className="text-sm text-slate-900">
-          {WITHDRAWAL_WAIVER_TEXT}
-        </label>
-      </div>
+      <label
+        htmlFor="withdrawal-waiver"
+        className="flex min-h-11 cursor-pointer items-start gap-3"
+      >
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center">
+          <input
+            id="withdrawal-waiver"
+            type="checkbox"
+            checked={waiverAccepted}
+            onChange={(e) => setWaiverAccepted(e.target.checked)}
+            className="h-5 w-5"
+          />
+        </span>
+        <span className="py-3 text-sm text-slate-900">{WITHDRAWAL_WAIVER_TEXT}</span>
+      </label>
 
       <p className="text-lg font-medium">Totaal: {formatPriceCents(totalCents)}</p>
 

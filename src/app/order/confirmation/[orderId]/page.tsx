@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPriceCents } from "@/lib/currency";
+import { CopyKeyButton } from "@/components/shop/CopyKeyButton";
 
 export const metadata: Metadata = {
   title: "Bestelling bevestigd",
@@ -65,12 +66,15 @@ export default async function OrderConfirmationPage({
                 </p>
                 {item.deliveredKeys.map((key) =>
                   key.deliveryMethod === "text" ? (
-                    <p
+                    <div
                       key={key.id}
-                      className="mt-2 rounded bg-slate-100 p-2 font-mono text-sm"
+                      className="mt-2 flex flex-wrap items-center gap-2 rounded bg-slate-100 p-2"
                     >
-                      {key.value}
-                    </p>
+                      <p className="min-w-0 flex-1 break-all font-mono text-sm">
+                        {key.value}
+                      </p>
+                      <CopyKeyButton value={key.value} />
+                    </div>
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img

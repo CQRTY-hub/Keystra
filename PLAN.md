@@ -86,6 +86,30 @@ up the shell.
 - Review the diff before merging. Even where I can't judge every line, I can see the
   shape — and anything touching keys, money or auth gets read properly.
 
+### Mobile is the primary device, not a variant
+
+Traffic will come from TikTok and Instagram, so most buyers arrive on a phone. Design and
+review every page at phone width first, then widen. A layout that works on a laptop and
+"also works" on mobile is backwards for this shop.
+
+Non-negotiable on small screens:
+
+- **The key on the confirmation page must have a copy button.** A long key string on a
+  narrow screen overflows or wraps badly, and selecting text with a thumb is close to
+  impossible. This is the most important moment in the entire transaction — it cannot be
+  fiddly. Same on the order lookup result.
+- **Tap targets at least 44px**, especially the terms and withdrawal-waiver checkboxes.
+  A consent checkbox that's hard to hit is a consent checkbox people mis-tap.
+- **Correct keyboards on inputs** — `type="email"` for the email field, numeric where
+  numeric.
+- **Sticky buy bar** on product pages (already in Phase 3.7).
+- **Nothing horizontally scrollable.** Long keys, order numbers and prices all have to fit
+  or wrap deliberately.
+- Test on a real phone, not just the browser's device simulator. Vercel preview URLs open
+  on a phone — use them.
+
+Tablet needs no separate design; it falls out of doing phone and desktop properly.
+
 ### Deliberately not using an agent orchestration harness
 
 Ruflo (formerly Claude Flow) and similar swarm/meta-harness frameworks are **out of scope
