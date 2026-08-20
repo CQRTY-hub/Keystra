@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
 
   let anyFailed = false;
   let anyAwaitingCode = false;
+  const pendingCodes: { orderItemId: string; codeId: string }[] = [];
 
   for (const item of paidOrder.items) {
     const result = await fulfillment.orderKey(
@@ -94,7 +95,13 @@ export async function POST(req: NextRequest) {
       orderId: paidOrder.id,
       eventType:
         result.status === "failed" ? "supplier.order_failed" : "supplier.order_key",
-      payload: { orderItemId: item.id, status: result.status },
+      payload: {
+        orderItemId: item.id,
+        status: result.status,
+        // codeId is an identifier, not a key value — safe to log in the
+        // clear, unlike the code it eventually resolves to.
+        ...(result.status === "awaiting_code" ? { codeId: result.codeId } : {}),
+      },
     });
 
     if (result.status === "failed") {
@@ -104,6 +111,13 @@ export async function POST(req: NextRequest) {
 
     if (result.status === "awaiting_code") {
       anyAwaitingCode = true;
+      // Without this, a paid order has no way to know which code to
+      // retrieve later — the whole reason this field exists.
+      await prisma.orderItem.update({
+        where: { id: item.id },
+        data: { pendingCodeId: result.codeId },
+      });
+      pendingCodes.push({ orderItemId: item.id, codeId: result.codeId });
       continue;
     }
 
@@ -156,7 +170,7 @@ export async function POST(req: NextRequest) {
     await logEvent({
       orderId: paidOrder.id,
       eventType: "order.awaiting_code",
-      payload: {},
+      payload: { pendingCodes },
     });
 
     const email = getEmailProvider();

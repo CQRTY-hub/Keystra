@@ -103,6 +103,17 @@ model OrderItem {
   quantity      Int      @default(1)
   unitPriceCents Int
 
+  // Set when the supplier's orderKey() returns CODE_PREORDER (order
+  // status becomes awaiting_code) — the identifier CodesWholesaleProvider
+  // will later use to retrieve the actual code (GET /v3/codes/{codeId},
+  // see src/lib/fulfillment/codeswholesale-provider.ts's retrieveCode()).
+  // An identifier, not a key value — safe to log and store in the clear,
+  // unlike DeliveredKey.value. Lives here rather than on DeliveredKey
+  // because nothing has been delivered yet; DeliveredKey means exactly
+  // that a key exists and was written before being shown (non-negotiable
+  // #1) — this field exists specifically for the state before that's true.
+  pendingCodeId String?
+
   deliveredKeys DeliveredKey[]
 
   @@index([orderId])
