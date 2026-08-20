@@ -139,7 +139,7 @@ Everywhere else, the checkpoint isn't friction — it's the only review this pro
 The public CodesWholesale documentation answers most of what we needed. Below is what the
 API actually does, then the short list still to confirm with support. Verify everything in
 the *current* docs and in the sandbox — some of what follows comes from older published
-versions, and the API has moved from v1 to v2 endpoints.
+versions, and **the API is now v3 — v1 and v2 are no longer available.**
 
 ### What we know
 
@@ -190,35 +190,66 @@ local product catalogue in sync rather than hitting the API on every page view. 
 practical notes: there's a postback test tool, and there's a history of hash-encoding
 complaints on their SDK, so verify signatures defensively and log every postback raw.
 
-**Risk scoring exists.** Their platform can score incoming orders and suspend anything at or
-above a threshold, with 1.5 as their suggested value. Find out whether this is exposed
-through the API or only through their plugins — if it's available, it feeds directly into
-the fraud holds in Phase 3.6.
+**Risk scoring is available over the API.** Confirmed by support: `POST /v3/security`
+returns a numeric `riskScore`. Call it before fulfilment and use it to drive the risk-based
+holds in Phase 3.6 — a high score sends the order to `held` for my manual review instead of
+delivering a key. This is a supplier-provided fraud signal I'd otherwise have to build
+myself; use it.
+above a threshold, with 1.5 as their suggested value.
 
-### Faulty keys are NOT an API operation — plan around this
+**Auth and rate limits — confirmed by support.** Token lifetime is 60 minutes, and
+requesting a new token while one is still valid returns the same token with its remaining
+life. So: store the token, reuse it, only request a new one once it has actually expired.
+Limits that matter:
 
-This is the finding that affects your economics. A bad key is handled by a **manual support
-form with screenshots attached**, not a programmatic return. Their own instructions are
-explicit: do not send a replacement key and do not refund the customer until CodesWholesale
-has responded. They also warn to first confirm the key wasn't duplicated inside your own
-system.
+- `/oauth/token` — 50 requests per 5 minutes per IP. With caching this is about one call
+  per hour, nowhere near the limit.
+- `GET /v3/products` (full price list) — 400 per 10 minutes.
+- `GET /v3/products/{productId}` — 600 per 5 minutes.
 
-Consequences, all of which are already reflected in the plan:
-- Your existing four-screenshot evidence policy is exactly right, and it's now a supplier
-  requirement rather than just your preference. Keep it.
+Their recommended pattern, which matches the plan: **keep the catalogue cached locally and
+refresh periodically using the `createdSince` and `updatedSince` parameters** rather than
+pulling the full list. That cuts both request count and payload size, and means the shop
+never queries the supplier on a page view.
+
+**Sandbox** is public — no activation needed, demo credentials are in the documentation,
+test catalogue and test codes only.
+
+### Faulty keys — confirmed terms, and the decision they force
+
+A bad key goes through a support form with screenshots. Confirmed by support: **reportable
+up to 1 year from purchase**, and **CodesWholesale has up to 14 business days to provide a
+solution**, though most cases resolve sooner. There is also a **separate complaint API** —
+ask for those docs before building this part.
+
+The one-year window is generous. The 14 business days is the problem: that's three calendar
+weeks, and no customer waits three weeks for a key that doesn't work. So there's a policy
+decision to make before launch, and it's a business decision, not a technical one:
+
+- **Resolve for the customer immediately** — refund or replace within hours — and carry the
+  supplier claim yourself in the background. Costs money when a claim is rejected, but it's
+  the only answer that keeps a new shop's reputation intact.
+- **Make the customer wait** for the supplier verdict. Cheaper, and reputationally fatal
+  for a shop nobody has heard of yet.
+
+Take the first. Price the margin so that carrying it is survivable, and treat supplier
+reimbursement as recovery rather than as the customer's timeline. Note this cuts against
+CodesWholesale's own advice not to refund before they respond — that advice optimises for
+their exposure, not for my reputation.
+
+Consequences already reflected in the plan:
+- The four-screenshot evidence policy stays, and is now also a supplier requirement.
 - The support widget must never resolve a faulty-key claim. Never.
-- There is a real float: you carry the cost between the customer complaining and the
-  supplier deciding. Price the margin with that in mind.
-- Keys must never be duplicated or re-issued from your own database. One key, one order.
+- Keys must never be duplicated or re-issued from my own database. One key, one order.
+- Track open supplier claims in the admin: what was claimed, when, and whether the
+  reimbursement ever arrived. Otherwise money quietly leaks.
 
-### Still to confirm with support
+### Still to confirm
 
-- Rate limits — requests per minute.
-- Exact token lifetime, and whether the v2 endpoints differ from what's published.
-- Whether the risk score is available over the API.
-- The faulty-key window: how long after purchase can you report, and what's their turnaround?
+- Documentation for the separate complaint API.
+- Whether a low-balance notification can post back to me automatically.
 
-**Deliverable:** sandbox credentials on your own account, plus these answers. Then we design
+**Deliverable:** sandbox credentials (public — just take them from the docs). Then we design
 `CodesWholesaleProvider` against the sandbox rather than against assumptions.
 
 ---

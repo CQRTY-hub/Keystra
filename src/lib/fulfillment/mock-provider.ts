@@ -2,6 +2,8 @@ import type {
   AvailabilityResult,
   FulfillmentProvider,
   KeyResult,
+  RiskAssessmentInput,
+  RiskAssessmentResult,
 } from "./types";
 
 /**
@@ -21,9 +23,33 @@ export const MOCK_SCENARIO_PRODUCT_IDS = {
   timeout: "00000000-0000-4000-a000-000000000003",
   imageKey: "00000000-0000-4000-a000-000000000004",
   awaitingCode: "00000000-0000-4000-a000-000000000005",
+  /**
+   * PLAN.md, Phase 0.5: "Faulty keys are NOT an API operation" — a bad
+   * key is never detectable at fulfilment time, only discovered later
+   * when the customer tries to redeem it. So this scenario delivers
+   * NORMALLY (status "delivered", CODE_TEXT) — the order succeeds, same
+   * as the default case. The only difference is the value is
+   * deliberately recognisable, so once the Phase 3.6 faulty-key claim
+   * path exists, this is the fixture to test it against.
+   */
+  faultyKey: "00000000-0000-4000-a000-000000000006",
 } as const;
 
 const MOCK_PRICE_CENTS = 1999;
+
+/**
+ * There's no product to key a risk simulation off — CodesWholesale's
+ * `POST /v3/security` scores the ORDER (customer, amount, IP), not a
+ * product. So the trigger here is the customer email instead. Anything
+ * else scores low. CodesWholesale's own suggested hold threshold is 1.5
+ * (PLAN.md, Phase 0.5) — the high score here is deliberately above it,
+ * the low score deliberately below.
+ */
+export const MOCK_RISK_SCENARIO_EMAILS = {
+  high: "risk-high@mock.test",
+} as const;
+
+const MOCK_RISK_HOLD_THRESHOLD = 1.5;
 
 export class MockFulfillmentProvider implements FulfillmentProvider {
   async checkAvailability(productId: string): Promise<AvailabilityResult> {
@@ -74,6 +100,13 @@ export class MockFulfillmentProvider implements FulfillmentProvider {
           retrievalUrl: `https://sandbox.codeswholesale.com/mock-retrieval/${orderId}`,
         };
 
+      case MOCK_SCENARIO_PRODUCT_IDS.faultyKey:
+        return {
+          status: "delivered",
+          codeType: "CODE_TEXT",
+          value: `MOCK-FAULTY-${orderId.slice(0, 8).toUpperCase()}`,
+        };
+
       default:
         return {
           status: "delivered",
@@ -83,5 +116,12 @@ export class MockFulfillmentProvider implements FulfillmentProvider {
             .toUpperCase()}`,
         };
     }
+  }
+
+  async assessRisk(input: RiskAssessmentInput): Promise<RiskAssessmentResult> {
+    const riskScore =
+      input.customerEmail === MOCK_RISK_SCENARIO_EMAILS.high ? 8.5 : 0.4;
+
+    return { riskScore, suggestedHoldThreshold: MOCK_RISK_HOLD_THRESHOLD };
   }
 }

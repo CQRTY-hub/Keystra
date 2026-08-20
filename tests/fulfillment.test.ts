@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MockFulfillmentProvider,
   MOCK_SCENARIO_PRODUCT_IDS,
+  MOCK_RISK_SCENARIO_EMAILS,
 } from "@/lib/fulfillment/mock-provider";
 
 describe("MockFulfillmentProvider", () => {
@@ -76,5 +77,49 @@ describe("MockFulfillmentProvider", () => {
       expect(result.codeType).toBe("CODE_PREORDER");
       expect(result.retrievalUrl).toContain(orderId);
     }
+  });
+
+  it("delivers the faulty-key scenario normally — a bad key is never detectable at fulfilment time", async () => {
+    const result = await provider.orderKey(
+      MOCK_SCENARIO_PRODUCT_IDS.faultyKey,
+      orderId
+    );
+    expect(result.status).toBe("delivered");
+    if (result.status === "delivered" && result.codeType === "CODE_TEXT") {
+      // Recognisable, so a future claim-path test can target this exact
+      // fixture — but the order itself succeeded like any other.
+      expect(result.value).toContain("FAULTY");
+    } else {
+      throw new Error("expected a CODE_TEXT delivery");
+    }
+  });
+
+  describe("assessRisk", () => {
+    it("scores the magic high-risk email above CodesWholesale's suggested threshold", async () => {
+      const result = await provider.assessRisk({
+        orderId,
+        customerEmail: MOCK_RISK_SCENARIO_EMAILS.high,
+        amountCents: 3999,
+      });
+      expect(result.riskScore).toBeGreaterThanOrEqual(result.suggestedHoldThreshold);
+    });
+
+    it("scores an ordinary email below the suggested threshold", async () => {
+      const result = await provider.assessRisk({
+        orderId,
+        customerEmail: "ordinary-customer@example.com",
+        amountCents: 3999,
+      });
+      expect(result.riskScore).toBeLessThan(result.suggestedHoldThreshold);
+    });
+
+    it("reports CodesWholesale's suggested hold threshold as 1.5", async () => {
+      const result = await provider.assessRisk({
+        orderId,
+        customerEmail: "ordinary-customer@example.com",
+        amountCents: 3999,
+      });
+      expect(result.suggestedHoldThreshold).toBe(1.5);
+    });
   });
 });

@@ -2,8 +2,15 @@ import type { FulfillmentProvider } from "./types";
 import { MockFulfillmentProvider } from "./mock-provider";
 import { CodesWholesaleProvider } from "./codeswholesale-provider";
 
-export type { FulfillmentProvider, AvailabilityResult, KeyResult, CodeType } from "./types";
-export { MOCK_SCENARIO_PRODUCT_IDS } from "./mock-provider";
+export type {
+  FulfillmentProvider,
+  AvailabilityResult,
+  KeyResult,
+  CodeType,
+  RiskAssessmentInput,
+  RiskAssessmentResult,
+} from "./types";
+export { MOCK_SCENARIO_PRODUCT_IDS, MOCK_RISK_SCENARIO_EMAILS } from "./mock-provider";
 
 /**
  * The only place that decides which provider is live. Everything else

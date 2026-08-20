@@ -71,6 +71,13 @@ const SAMPLE_PRODUCTS = [
     region: "EU",
     priceCents: 1999,
   },
+  {
+    supplierProductId: MOCK_SCENARIO_PRODUCT_IDS.faultyKey,
+    title: "[QA] Faulty key scenario (delivers normally)",
+    platform: "Steam",
+    region: "EU",
+    priceCents: 1999,
+  },
 ];
 
 async function seedProducts() {

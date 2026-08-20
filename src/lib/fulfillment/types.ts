@@ -22,6 +22,26 @@ export interface AvailabilityResult {
   priceCents: number;
 }
 
+export interface RiskAssessmentInput {
+  orderId: string;
+  customerEmail: string;
+  amountCents: number;
+  ipAddress?: string;
+  billingCountry?: string;
+}
+
+export interface RiskAssessmentResult {
+  /** The supplier's own numeric fraud score for this order. */
+  riskScore: number;
+  /**
+   * CodesWholesale's own suggested hold threshold (PLAN.md, Phase 0.5:
+   * "1.5 as their suggested value"). Feeds the risk-based holds in
+   * Phase 3.6 — riskScore at or above this sends the order to `held`
+   * for manual review instead of fulfilling it.
+   */
+  suggestedHoldThreshold: number;
+}
+
 export type KeyResult =
   | {
       status: "delivered";
@@ -50,4 +70,14 @@ export type KeyResult =
 export interface FulfillmentProvider {
   checkAvailability(productId: string): Promise<AvailabilityResult>;
   orderKey(productId: string, orderId: string): Promise<KeyResult>;
+  /**
+   * Confirmed by CodesWholesale support (PLAN.md, Phase 0.5): `POST
+   * /v3/security` returns a numeric riskScore. Call before fulfilment;
+   * a score at or above suggestedHoldThreshold is a Phase 3.6 hold, not
+   * a delivery. Part of this interface (not a standalone helper) because
+   * it's a supplier-specific fraud signal, same as availability or the
+   * key itself — the mock and CodesWholesaleProvider each simulate/call
+   * it their own way, and nothing else in the app should know which.
+   */
+  assessRisk(input: RiskAssessmentInput): Promise<RiskAssessmentResult>;
 }
