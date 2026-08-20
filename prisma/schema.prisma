@@ -14,8 +14,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Pooled connection (Supavisor/pgbouncer) — what the running app uses.
+  url       = env("DATABASE_URL")
+  // Direct connection — only Prisma CLI commands (migrate, studio) use
+  // this. Migrations need a direct connection; pooled transaction-mode
+  // connections don't support the locks Prisma migrate relies on.
+  directUrl = env("DIRECT_URL")
 }
 
 // One row. Read/written through src/lib/kill-switch.ts. This is the flag

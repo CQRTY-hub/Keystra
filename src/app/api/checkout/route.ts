@@ -71,6 +71,11 @@ export async function POST(req: NextRequest) {
 
   for (const item of items) {
     const product = products.find((p) => p.id === item.productId)!;
+    // The fulfillment provider is only the source of truth for
+    // AVAILABILITY here — its priceCents is the supplier's cost feed
+    // (what we pay), not what we charge. What we charge is our own
+    // current Product.priceCents, just re-read from the DB above so an
+    // admin price change is always reflected, never a stale cached page.
     const availability = await fulfillment.checkAvailability(
       product.supplierProductId
     );
@@ -83,7 +88,7 @@ export async function POST(req: NextRequest) {
     orderLines.push({
       productId: product.id,
       quantity: item.quantity,
-      unitPriceCents: availability.priceCents,
+      unitPriceCents: product.priceCents,
     });
   }
 

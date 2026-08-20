@@ -12,7 +12,13 @@ export type CodeType = "CODE_TEXT" | "CODE_IMAGE" | "CODE_PREORDER";
 
 export interface AvailabilityResult {
   available: boolean;
-  /** Price in cents, at the purchase-quantity band actually being bought. */
+  /**
+   * The SUPPLIER's price in cents, at the purchase-quantity band actually
+   * being bought — i.e. what we pay, not what we charge. Feeds the
+   * Phase 3.5 repricing rule (margin over this figure), which is what
+   * sets Product.priceCents. Checkout charges Product.priceCents, never
+   * this field directly — see src/app/api/checkout/route.ts.
+   */
   priceCents: number;
 }
 

@@ -49,14 +49,19 @@ Open <http://localhost:3000>.
    ```
 
 5. Zet de kill switch aan zodat afrekenen werkt — er is nog geen
-   adminpaneel (dat komt in Fase 3.5), dus dit gaat via Prisma Studio:
+   adminpaneel (dat komt in Fase 3.5), dus dit gaat via het seed-script:
 
    ```bash
-   npx prisma studio
+   npm run db:seed
    ```
 
-   Open `ShopSettings`, maak (indien nodig) de rij met `id = 1` aan, en zet
-   `checkoutEnabled` op `true`.
+   Dit maakt (idempotent, alleen als hij nog niet bestaat) de
+   `ShopSettings`-rij aan met `checkoutEnabled: true`. Bestaat de rij al,
+   dan laat het script hem met rust — een herhaalde run zet dus nooit per
+   ongeluk verkoop weer aan nadat je hem bewust gepauzeerd hebt.
+
+   Wil je de instelling handmatig bekijken of wijzigen: `npm run
+   prisma:studio` opent Prisma Studio.
 
 ## Scripts
 
@@ -69,6 +74,12 @@ Open <http://localhost:3000>.
 | `npm run test:watch` | Testsuite, watch-modus |
 | `npm run prisma:generate` | Prisma Client genereren uit het schema |
 | `npm run prisma:migrate` | Migratie aanmaken en uitvoeren (dev) |
+| `npm run prisma:studio` | Prisma Studio openen (database inzien/bewerken) |
+| `npm run db:seed` | `ShopSettings`-rij aanmaken (kill switch aan), idempotent |
+
+Alle `prisma:*`- en `db:*`-scripts laden `.env.local` expliciet (via
+`dotenv-cli`) — de Prisma CLI leest die van zichzelf niet, alleen een
+bestand genaamd `.env`.
 
 ## Architectuur — de plumbing-laag
 
