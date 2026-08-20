@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getMessages } from "@/i18n";
 
 /**
  * PLAN.md, "Mobile is the primary device": a long key on a narrow screen
@@ -10,6 +11,7 @@ import { useState } from "react";
  */
 export function CopyKeyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
+  const t = getMessages();
 
   async function handleCopy() {
     try {
@@ -29,8 +31,8 @@ export function CopyKeyButton({ value }: { value: string }) {
       onClick={handleCopy}
       className="inline-flex h-11 shrink-0 items-center justify-center rounded border border-slate-300 px-4 text-sm font-medium hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
     >
-      {copied ? "Gekopieerd!" : "Kopiëren"}
-      <span className="sr-only"> naar klembord</span>
+      {copied ? t.copyKey.copied : t.copyKey.copy}
+      <span className="sr-only">{t.copyKey.srSuffix}</span>
     </button>
   );
 }

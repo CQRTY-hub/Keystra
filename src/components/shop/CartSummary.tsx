@@ -3,31 +3,33 @@
 import { useCart } from "@/lib/cart-context";
 import { formatPriceCents } from "@/lib/currency";
 import { Button } from "@/components/ui/Button";
+import { getMessages } from "@/i18n";
 
 export function CartSummary() {
   const { items, removeItem, setQuantity, totalCents } = useCart();
+  const t = getMessages();
 
   if (items.length === 0) {
-    return <p className="text-slate-700">Je winkelmandje is leeg.</p>;
+    return <p className="text-slate-700">{t.cart.empty}</p>;
   }
 
   return (
     <div>
       <table className="w-full text-left">
-        <caption className="sr-only">Inhoud van je winkelmandje</caption>
+        <caption className="sr-only">{t.cart.tableCaption}</caption>
         <thead>
           <tr className="border-b border-slate-300">
             <th scope="col" className="py-2">
-              Product
+              {t.cart.productHeader}
             </th>
             <th scope="col" className="py-2">
-              Aantal
+              {t.cart.quantityHeader}
             </th>
             <th scope="col" className="py-2">
-              Prijs
+              {t.cart.priceHeader}
             </th>
             <th scope="col" className="py-2">
-              <span className="sr-only">Verwijderen</span>
+              <span className="sr-only">{t.cart.removeHeader}</span>
             </th>
           </tr>
         </thead>
@@ -37,7 +39,7 @@ export function CartSummary() {
               <td className="py-2">{item.title}</td>
               <td className="py-2">
                 <label className="sr-only" htmlFor={`qty-${item.productId}`}>
-                  Aantal voor {item.title}
+                  {t.cart.quantityLabelFor(item.title)}
                 </label>
                 <input
                   id={`qty-${item.productId}`}
@@ -59,16 +61,14 @@ export function CartSummary() {
                   variant="secondary"
                   onClick={() => removeItem(item.productId)}
                 >
-                  Verwijderen
+                  {t.cart.remove}
                 </Button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p className="mt-4 text-lg font-medium">
-        Totaal: {formatPriceCents(totalCents)}
-      </p>
+      <p className="mt-4 text-lg font-medium">{t.cart.total(formatPriceCents(totalCents))}</p>
     </div>
   );
 }

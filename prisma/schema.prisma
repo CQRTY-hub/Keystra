@@ -35,6 +35,15 @@ model ShopSettings {
   updatedAt        DateTime @updatedAt
 }
 
+// PLAN.md, "Product scope and launch decisions": Steam keys, gift cards,
+// and top-up codes only at launch. Platform is close to useless as a
+// filter when everything is Steam — category is the axis that matters.
+enum ProductCategory {
+  game_key
+  gift_card
+  top_up
+}
+
 model Product {
   id             String   @id @default(uuid())
   // The supplier's own product ID (UUID from CodesWholesale). Unique,
@@ -42,7 +51,7 @@ model Product {
   // Never match a product by title.
   supplierProductId String @unique
   title          String
-  platform       String
+  category       ProductCategory
   region         String
   // Stored in the smallest currency unit (cents) to avoid float rounding.
   priceCents     Int
@@ -53,6 +62,7 @@ model Product {
   orderItems     OrderItem[]
 
   @@index([active])
+  @@index([category])
 }
 
 enum OrderStatus {

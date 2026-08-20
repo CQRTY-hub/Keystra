@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPriceCents } from "@/lib/currency";
 import { CopyKeyButton } from "@/components/shop/CopyKeyButton";
+import { getMessages } from "@/i18n";
 
 export const metadata: Metadata = {
-  title: "Bestelling bevestigd",
+  title: "Order confirmed",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic"; // can contain a key — never cache
@@ -17,6 +18,7 @@ interface ConfirmationPageProps {
 export default async function OrderConfirmationPage({
   params,
 }: ConfirmationPageProps) {
+  const t = getMessages();
   const { orderId } = await params;
 
   const order = await prisma.order.findUnique({
@@ -32,30 +34,27 @@ export default async function OrderConfirmationPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Bedankt voor je bestelling</h1>
+      <h1 className="text-2xl font-semibold">{t.confirmation.title}</h1>
       <p className="mt-2 text-slate-700">
-        Bestelling {order.id} — status: {order.status}
+        {t.confirmation.orderStatus(order.id, order.status)}
       </p>
 
       {order.status === "held" && (
         <p className="mt-4 rounded border border-slate-300 bg-slate-50 p-4">
-          Er ging iets mis bij het leveren van je key. We nemen dit
-          persoonlijk op en nemen contact met je op op {order.customerEmail}.
+          {t.confirmation.heldBody(order.customerEmail)}
         </p>
       )}
 
       {order.status === "awaiting_code" && (
         <p className="mt-4 rounded border border-slate-300 bg-slate-50 p-4">
-          Je betaling is bevestigd en je key is gereserveerd. Ze is nog niet
-          direct beschikbaar bij de leverancier — we sturen ze zodra ze
-          binnenkomt, naar {order.customerEmail}.
+          {t.confirmation.awaitingCodeBody(order.customerEmail)}
         </p>
       )}
 
       {order.status === "completed" && (
         <div className="mt-6">
           <p className="text-slate-700">
-            We hebben je key ook gemaild naar {order.customerEmail}.
+            {t.confirmation.completedEmailedTo(order.customerEmail)}
           </p>
           <ul className="mt-4 flex flex-col gap-4">
             {order.items.map((item) => (
@@ -80,7 +79,7 @@ export default async function OrderConfirmationPage({
                     <img
                       key={key.id}
                       src={`data:image/png;base64,${key.value}`}
-                      alt={`Key voor ${item.product.title}`}
+                      alt={`Key for ${item.product.title}`}
                       className="mt-2 max-w-xs"
                     />
                   )
@@ -94,10 +93,7 @@ export default async function OrderConfirmationPage({
       {(order.status === "pending" ||
         order.status === "paid" ||
         order.status === "fulfilling") && (
-        <p className="mt-4 text-slate-700">
-          We verwerken je bestelling. Deze pagina toont je key zodra hij
-          klaar is.
-        </p>
+        <p className="mt-4 text-slate-700">{t.confirmation.processing}</p>
       )}
     </div>
   );

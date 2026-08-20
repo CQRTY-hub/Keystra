@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import {
-  COOKIE_CONSENT_COOKIE_NAME,
-  type CookieConsentValue,
-} from "@/lib/consent-text";
+import type { CookieConsentValue } from "@/lib/consent-text";
+import { readCookieConsentFromDocument } from "@/lib/consent-client";
 import { recordCookieConsent } from "@/lib/actions/consent-actions";
+import { getMessages } from "@/i18n";
 
 /**
  * Nothing non-essential fires before a visible choice is made here, and
  * rejecting is exactly as easy as accepting — one button each, same
  * size, same step. See PLAN.md Phase 1 point 7 and Appendix item 2.
+ * Withdrawing later is /cookie-preferences (linked from the footer),
+ * same recordCookieConsent() action, same ease.
  *
  * No analytics or other optional script exists anywhere in the app yet.
  * When one is added, it must be gated behind an "accepted" read of
@@ -19,19 +20,13 @@ import { recordCookieConsent } from "@/lib/actions/consent-actions";
  * added unconditionally.
  */
 export function CookieConsent() {
+  const t = getMessages();
   const [choice, setChoice] = useState<CookieConsentValue | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // One-time hydration from document.cookie, which doesn't exist during
-    // SSR — there's no way to know the visitor's prior choice until this
-    // runs on the client, so this can't be computed during render.
-    const match = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith(`${COOKIE_CONSENT_COOKIE_NAME}=`));
-    const value = match?.split("=")[1];
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setChoice(value === "accepted" || value === "rejected" ? value : null);
+    setChoice(readCookieConsentFromDocument());
     setReady(true);
   }, []);
 
@@ -51,19 +46,16 @@ export function CookieConsent() {
   return (
     <div
       role="dialog"
-      aria-label="Cookievoorkeuren"
+      aria-label={t.cookieConsent.dialogLabel}
       className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-300 bg-white p-4"
     >
       <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-900">
-          We gebruiken alleen cookies die nodig zijn om de shop te laten
-          werken, tenzij je hieronder akkoord gaat met meer.
-        </p>
+        <p className="text-sm text-slate-900">{t.cookieConsent.body}</p>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => choose("rejected")}>
-            Weigeren
+            {t.cookieConsent.reject}
           </Button>
-          <Button onClick={() => choose("accepted")}>Accepteren</Button>
+          <Button onClick={() => choose("accepted")}>{t.cookieConsent.accept}</Button>
         </div>
       </div>
     </div>

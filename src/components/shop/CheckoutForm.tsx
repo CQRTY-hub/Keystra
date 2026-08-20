@@ -7,17 +7,19 @@ import { Button } from "@/components/ui/Button";
 import { useCart } from "@/lib/cart-context";
 import { formatPriceCents } from "@/lib/currency";
 import { WITHDRAWAL_WAIVER_TEXT } from "@/lib/consent-text";
+import { getMessages } from "@/i18n";
 
 /**
  * Two separate, independently-required checkboxes — terms and the
  * withdrawal-right waiver — both unticked by default (PLAN.md Phase 1
- * point 6). The "Bestelling met betalingsverplichting" wording on the
- * submit button is required under EU distance-selling rules; it must not
- * say "Continue" or "Confirm" (Appendix, "Checkout and pricing mechanics").
+ * point 6). The submit button's wording ("Order with obligation to pay")
+ * is required under EU distance-selling rules; it must not say
+ * "Continue" or "Confirm" (Appendix, "Checkout and pricing mechanics").
  */
 export function CheckoutForm() {
   const { items, totalCents, clear } = useCart();
   const router = useRouter();
+  const t = getMessages();
 
   const [email, setEmail] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -53,28 +55,28 @@ export function CheckoutForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message ?? "Er ging iets mis. Probeer het opnieuw.");
+        setError(data.message ?? t.checkout.genericError);
         return;
       }
 
       clear();
       router.push(data.checkoutUrl);
     } catch {
-      setError("Kon geen verbinding maken. Probeer het opnieuw.");
+      setError(t.checkout.connectionError);
     } finally {
       setSubmitting(false);
     }
   }
 
   if (items.length === 0) {
-    return <p className="text-slate-700">Je winkelmandje is leeg.</p>;
+    return <p className="text-slate-700">{t.checkout.emptyCart}</p>;
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-6">
       <Input
         id="email"
-        label="E-mailadres"
+        label={t.checkout.email}
         type="email"
         required
         value={email}
@@ -99,11 +101,11 @@ export function CheckoutForm() {
           />
         </span>
         <span className="py-3 text-sm text-slate-900">
-          Ik ga akkoord met de{" "}
+          {t.checkout.termsPrefix}
           <a href="/terms" className="underline" target="_blank" rel="noreferrer">
-            algemene voorwaarden
+            {t.checkout.termsLink}
           </a>
-          .
+          {t.checkout.termsSuffix}
         </span>
       </label>
 
@@ -123,7 +125,7 @@ export function CheckoutForm() {
         <span className="py-3 text-sm text-slate-900">{WITHDRAWAL_WAIVER_TEXT}</span>
       </label>
 
-      <p className="text-lg font-medium">Totaal: {formatPriceCents(totalCents)}</p>
+      <p className="text-lg font-medium">{t.checkout.total(formatPriceCents(totalCents))}</p>
 
       {error && (
         <p role="alert" className="text-sm text-red-700">
@@ -132,7 +134,7 @@ export function CheckoutForm() {
       )}
 
       <Button type="submit" disabled={!canSubmit || submitting}>
-        {submitting ? "Bezig..." : "Bestelling met betalingsverplichting"}
+        {submitting ? t.checkout.submitting : t.checkout.submit}
       </Button>
     </form>
   );

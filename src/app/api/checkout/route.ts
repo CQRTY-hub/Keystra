@@ -6,6 +6,9 @@ import { getFulfillmentProvider } from "@/lib/fulfillment";
 import { createPayment } from "@/lib/payments/mollie-stub";
 import { recordCheckoutConsent } from "@/lib/consent";
 import { logEvent } from "@/lib/event-log";
+import { getMessages } from "@/i18n";
+
+const t = getMessages();
 
 const checkoutSchema = z.object({
   email: z.string().email(),
@@ -33,14 +36,14 @@ export async function POST(req: NextRequest) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "Ongeldige aanvraag." },
+      { message: t.api.checkout.invalidRequest },
       { status: 400 }
     );
   }
 
   if (!(await isCheckoutEnabled())) {
     return NextResponse.json(
-      { message: "Bestellingen zijn tijdelijk gepauzeerd." },
+      { message: t.api.checkout.paused },
       { status: 403 }
     );
   }
@@ -58,7 +61,7 @@ export async function POST(req: NextRequest) {
 
   if (products.length !== items.length) {
     return NextResponse.json(
-      { message: "Een of meer producten zijn niet meer beschikbaar." },
+      { message: t.api.checkout.productsUnavailable },
       { status: 409 }
     );
   }
@@ -81,7 +84,7 @@ export async function POST(req: NextRequest) {
     );
     if (!availability.available) {
       return NextResponse.json(
-        { message: `"${product.title}" is niet meer op voorraad.` },
+        { message: t.api.checkout.productOutOfStock(product.title) },
         { status: 409 }
       );
     }
@@ -121,7 +124,7 @@ export async function POST(req: NextRequest) {
     orderId: order.id,
     amountCents: totalCents,
     currency: "EUR",
-    description: `Bestelling ${order.id}`,
+    description: t.api.checkout.orderDescription(order.id),
     redirectUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/order/confirmation/${order.id}`,
     webhookUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/mollie`,
   });

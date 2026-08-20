@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { getMessages } from "@/i18n";
 
 export function OrderLookupForm() {
   const router = useRouter();
+  const t = getMessages();
   const [orderId, setOrderId] = useState("");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -39,14 +41,14 @@ export function OrderLookupForm() {
     <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-4">
       <Input
         id="order-id"
-        label="Bestelnummer"
+        label={t.orderLookup.orderId}
         required
         value={orderId}
         onChange={(e) => setOrderId(e.target.value)}
       />
       <Input
         id="lookup-email"
-        label="E-mailadres"
+        label={t.orderLookup.email}
         type="email"
         required
         value={email}
@@ -55,11 +57,11 @@ export function OrderLookupForm() {
       />
       {notFound && (
         <p role="alert" className="text-sm text-red-700">
-          Geen bestelling gevonden met deze combinatie.
+          {t.orderLookup.notFound}
         </p>
       )}
       <Button type="submit" disabled={submitting}>
-        {submitting ? "Bezig..." : "Zoeken"}
+        {submitting ? t.orderLookup.searching : t.orderLookup.search}
       </Button>
     </form>
   );

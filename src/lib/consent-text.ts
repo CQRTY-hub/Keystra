@@ -1,3 +1,5 @@
+import withdrawalWaiverEn from "@/i18n/legal/withdrawal-waiver.en";
+
 /**
  * Plain constants only — no server-only imports (no `next/headers`, no
  * Prisma). This file gets bundled into client components (the checkout
@@ -12,11 +14,12 @@ export type CookieConsentValue = "accepted" | "rejected";
 
 // Bump these — and only these, never edit the wording in place — whenever
 // the shown text changes. Every order stores which version it saw.
-export const TERMS_VERSION = "2026-08-19";
-export const WITHDRAWAL_WAIVER_VERSION = "2026-08-19";
+//
+// Bumped 2026-08-20: the shop switched from Dutch to English copy
+// (PLAN.md, "Product scope and launch decisions" — English only at
+// launch). The wording itself changed, not just its language, so this
+// is a new version, not a translation of the old one in place.
+export const TERMS_VERSION = "2026-08-20";
+export const WITHDRAWAL_WAIVER_VERSION = "2026-08-20";
 
-export const WITHDRAWAL_WAIVER_TEXT =
-  "Ik ga ermee akkoord dat de levering van deze digitale game key " +
-  "onmiddellijk begint, en ik erken dat ik daardoor mijn wettelijk " +
-  "herroepingsrecht van 14 dagen verlies zodra de key aan mij is getoond " +
-  "of gemaild.";
+export const WITHDRAWAL_WAIVER_TEXT = withdrawalWaiverEn.text;

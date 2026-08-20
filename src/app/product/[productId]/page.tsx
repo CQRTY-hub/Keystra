@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
 import { getProductById, getProducts } from "@/lib/products";
 import { formatPriceCents } from "@/lib/currency";
+import { getMessages } from "@/i18n";
+import { GUIDE_ROUTES } from "@/lib/guide-routes";
 
 export const revalidate = 3600;
 
@@ -22,17 +25,17 @@ export async function generateMetadata({
   const { productId } = await params;
   const product = await getProductById(productId);
   if (!product) return {};
+  const t = getMessages();
+  const description = `${product.title} — ${t.category[product.category]}, region ${product.region}.`;
   return {
     title: product.title,
-    description: `${product.title} — ${product.platform}, regio ${product.region}.`,
-    openGraph: {
-      title: product.title,
-      description: `${product.title} — ${product.platform}, regio ${product.region}.`,
-    },
+    description,
+    openGraph: { title: product.title, description },
   };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
+  const t = getMessages();
   const { productId } = await params;
   const product = await getProductById(productId);
   if (!product) notFound();
@@ -41,7 +44,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <div>
       <h1 className="text-2xl font-semibold">{product.title}</h1>
       <div className="mt-2 flex gap-2">
-        <Badge>{product.platform}</Badge>
+        <Badge>{t.category[product.category]}</Badge>
         <Badge>{product.region}</Badge>
       </div>
       <p className="mt-4 text-xl font-medium">
@@ -53,19 +56,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
 
       <section className="mt-8">
-        <h2 className="text-lg font-medium">Inwisselinstructies</h2>
-        <p className="mt-2 text-slate-700">
-          Na betaling ontvang je direct een key op deze site en per e-mail.
-          Wissel de key in via de bijbehorende platformclient ({product.platform}).
+        <h2 className="text-lg font-medium">{t.product.redemptionTitle}</h2>
+        <p className="mt-2 text-slate-700">{t.product.redemptionBody}</p>
+        <p className="mt-2">
+          <Link href={GUIDE_ROUTES[product.category]} className="underline">
+            {t.product.howToRedeem}
+          </Link>
         </p>
       </section>
 
       <section className="mt-6">
-        <h2 className="text-lg font-medium">Regio en levering</h2>
-        <p className="mt-2 text-slate-700">
-          Deze key is gebonden aan regio {product.region}. Levering gebeurt
-          elektronisch, direct na bevestigde betaling.
-        </p>
+        <h2 className="text-lg font-medium">{t.product.regionTitle}</h2>
+        <p className="mt-2 text-slate-700">{t.product.regionBody(product.region)}</p>
       </section>
     </div>
   );

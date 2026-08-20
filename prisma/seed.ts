@@ -11,26 +11,34 @@ const prisma = new PrismaClient();
  */
 
 const SAMPLE_PRODUCTS = [
+  // Real scope per PLAN.md: Steam keys, gift cards, top-up codes only.
   {
     supplierProductId: "11111111-1111-4111-a111-111111111111",
     title: "Sample Adventure Game — Standard Edition",
-    platform: "Steam",
+    category: "game_key",
     region: "EU",
     priceCents: 3999,
   },
   {
     supplierProductId: "22222222-2222-4222-a222-222222222222",
-    title: "Sample Racing Game — Deluxe Edition",
-    platform: "PlayStation",
-    region: "EU",
-    priceCents: 5999,
+    title: "Sample Strategy Game",
+    category: "game_key",
+    region: "Global",
+    priceCents: 2499,
   },
   {
     supplierProductId: "33333333-3333-4333-a333-333333333333",
-    title: "Sample Strategy Game",
-    platform: "Xbox",
+    title: "Sample Store Gift Card — €25",
+    category: "gift_card",
+    region: "EU",
+    priceCents: 2500,
+  },
+  {
+    supplierProductId: "44444444-4444-4444-a444-444444444444",
+    title: "Sample Game Top-up — 1000 Points",
+    category: "top_up",
     region: "Global",
-    priceCents: 2499,
+    priceCents: 999,
   },
   // The fulfillment mock-scenario products — same IDs the tests use, so
   // every failure path (out of stock, empty balance, timeout, image key,
@@ -39,46 +47,46 @@ const SAMPLE_PRODUCTS = [
   {
     supplierProductId: MOCK_SCENARIO_PRODUCT_IDS.outOfStock,
     title: "[QA] Out of stock scenario",
-    platform: "Steam",
+    category: "game_key",
     region: "EU",
     priceCents: 1999,
   },
   {
     supplierProductId: MOCK_SCENARIO_PRODUCT_IDS.emptyBalance,
     title: "[QA] Empty supplier balance scenario",
-    platform: "Steam",
+    category: "game_key",
     region: "EU",
     priceCents: 1999,
   },
   {
     supplierProductId: MOCK_SCENARIO_PRODUCT_IDS.timeout,
     title: "[QA] Supplier timeout scenario",
-    platform: "Steam",
+    category: "game_key",
     region: "EU",
     priceCents: 1999,
   },
   {
     supplierProductId: MOCK_SCENARIO_PRODUCT_IDS.imageKey,
     title: "[QA] Image-delivered key scenario",
-    platform: "Steam",
+    category: "gift_card",
     region: "EU",
     priceCents: 1999,
   },
   {
     supplierProductId: MOCK_SCENARIO_PRODUCT_IDS.awaitingCode,
     title: "[QA] Awaiting-code (preorder) scenario",
-    platform: "Steam",
+    category: "game_key",
     region: "EU",
     priceCents: 1999,
   },
   {
     supplierProductId: MOCK_SCENARIO_PRODUCT_IDS.faultyKey,
     title: "[QA] Faulty key scenario (delivers normally)",
-    platform: "Steam",
+    category: "game_key",
     region: "EU",
     priceCents: 1999,
   },
-];
+] as const;
 
 async function seedProducts() {
   for (const product of SAMPLE_PRODUCTS) {
