@@ -111,6 +111,24 @@ Andere kernstukken:
 - `src/lib/kill-switch.ts` — de noodknop uit Fase 1, een databasevlag die
   bewust "closed" faalt als de database niet bereikbaar is.
 
+## Bekend gat: awaiting_code-resolutie (Fase 3)
+
+Als een bestelling in `awaiting_code` terechtkomt, staat de op te halen leverancierscode
+(`codeId`) sinds kort op `OrderItem.pendingCodeId` — maar er bestaat nog **niets** dat die
+ooit ophaalt. Fase 3 moet een resolutiejob bouwen die:
+
+1. elke `OrderItem` met een `pendingCodeId` op een `awaiting_code`-order oppikt;
+2. de code ophaalt via `GET /v3/codes/{codeId}` (`CodesWholesaleProvider.retrieveCode()`,
+   nu nog een stub met TODO);
+3. de key **eerst** wegschrijft naar `DeliveredKey`, net als bij een gewone bestelling —
+   nooit tonen of mailen vóór die write klaar is (non-negotiable #1) — en pas dán de order
+   naar `completed` zet;
+4. **loggen wanneer een `pendingCodeId` te lang openstaat.** Een bestelling die daar dagen
+   in blijft hangen is een betalende klant zonder key en zonder dat iemand het merkt, tenzij
+   deze job daar expliciet op let en het meldt.
+
+Volledige uitwerking staat als TODO onderaan `src/lib/fulfillment/codeswholesale-provider.ts`.
+
 ## Tests
 
 ```bash

@@ -130,6 +130,38 @@ export class CodesWholesaleProvider implements FulfillmentProvider {
   }
 }
 
+/**
+ * TODO(Phase 3): the `awaiting_code` resolution job — does not exist yet.
+ * This is the piece that actually closes the loop this file's
+ * retrieveCode() and OrderItem.pendingCodeId (schema.prisma) were built
+ * for. Without it, an order can sit in `awaiting_code` forever: paid,
+ * valid, and with no customer-facing way to ever get the key.
+ *
+ * Scheduled job, same reasoning as syncCatalog/syncReferenceData below —
+ * there's no push for this, only polling:
+ *
+ * 1. Find every `OrderItem` with a non-null `pendingCodeId` whose `Order`
+ *    is still `awaiting_code`.
+ * 2. Call `retrieveCode(pendingCodeId)` for each, via `getAccessToken()`.
+ * 3. On a real key: write the `DeliveredKey` row FIRST, exactly like the
+ *    webhook route does today — non-negotiable #1 (never show or email a
+ *    key before it's in the database) applies here just as much as it
+ *    does to the original order flow. Only after that write succeeds,
+ *    clear `pendingCodeId` and move the order to `completed` via
+ *    `assertTransition` (never a raw status write). Log through
+ *    `logEvent()`, same as everywhere else.
+ * 4. Still no code back: leave it — do not fail the order, do not retry
+ *    into a `held` state on its own. Next run tries again.
+ * 5. **Alert on staleness.** A `pendingCodeId` that's been open longer
+ *    than some threshold (start conservative — a day or two — and tune
+ *    from real data, same spirit as the fulfilment-failure circuit
+ *    breaker in Phase 3.5) needs its own log line and an alert to the
+ *    owner, not just silence. A paid customer with no key for days is a
+ *    support ticket and a chargeback waiting to happen, and nothing else
+ *    in the system will notice on its own — this job is the only thing
+ *    watching that clock.
+ */
+
 // ---------------------------------------------------------------------
 // Token management
 // ---------------------------------------------------------------------

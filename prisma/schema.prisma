@@ -112,6 +112,9 @@ model OrderItem {
   // because nothing has been delivered yet; DeliveredKey means exactly
   // that a key exists and was written before being shown (non-negotiable
   // #1) — this field exists specifically for the state before that's true.
+  // TODO(Phase 3): nothing resolves this yet — see the resolution-job
+  // TODO at the bottom of codeswholesale-provider.ts for what has to
+  // read it, and how.
   pendingCodeId String?
 
   deliveredKeys DeliveredKey[]
