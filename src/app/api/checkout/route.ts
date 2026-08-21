@@ -60,8 +60,18 @@ export async function POST(req: NextRequest) {
   });
 
   if (products.length !== items.length) {
+    // A cart can reference a productId the DB no longer has — the
+    // product was deactivated, or (Phase 1, most likely) the browser
+    // held onto a stale cart across a reseed. Tell the client exactly
+    // which ids didn't resolve, so it can drop just those instead of
+    // leaving the whole cart permanently stuck on a dead-end error.
+    const foundIds = new Set(products.map((p) => p.id));
+    const invalidProductIds = items
+      .map((i) => i.productId)
+      .filter((id) => !foundIds.has(id));
+
     return NextResponse.json(
-      { message: t.api.checkout.productsUnavailable },
+      { message: t.api.checkout.productsUnavailable, invalidProductIds },
       { status: 409 }
     );
   }
@@ -84,7 +94,10 @@ export async function POST(req: NextRequest) {
     );
     if (!availability.available) {
       return NextResponse.json(
-        { message: t.api.checkout.productOutOfStock(product.title) },
+        {
+          message: t.api.checkout.productOutOfStock(product.title),
+          invalidProductIds: [product.id],
+        },
         { status: 409 }
       );
     }

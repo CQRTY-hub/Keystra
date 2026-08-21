@@ -138,6 +138,8 @@ const en = {
     genericError: "Something went wrong. Please try again.",
     connectionError: "Could not connect. Please try again.",
     emptyCart: "Your cart is empty.",
+    staleItemsRemoved:
+      "One or more items in your cart are no longer available and were removed. Please review your cart and try again.",
   },
 
   killSwitch: {

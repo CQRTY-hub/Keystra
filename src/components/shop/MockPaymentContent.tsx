@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { getMessages } from "@/i18n";
+import { useCart } from "@/lib/cart-context";
 
 /**
  * Stands in for Mollie's hosted payment page (PLAN.md: "Payments: Mollie
@@ -16,12 +17,15 @@ import { getMessages } from "@/i18n";
  * payment — it sends the browser to /checkout/payment-failed exactly
  * the way Mollie would redirect there for real, without ever calling
  * the webhook route. The order is left `pending`; nothing was charged.
+ * The cart is deliberately still intact at that point — see clear()
+ * below for why.
  */
 function MockPaymentInner() {
   const params = useSearchParams();
   const router = useRouter();
   const orderId = params.get("orderId") ?? "";
   const t = getMessages();
+  const { clear } = useCart();
 
   const [status, setStatus] = useState<"idle" | "paying" | "error">("idle");
 
@@ -34,6 +38,11 @@ function MockPaymentInner() {
         body: `id=mock_mollie_${orderId}`,
       });
       if (!res.ok) throw new Error("webhook failed");
+      // Only clear the cart once payment is actually confirmed — not at
+      // order-creation time. Clearing earlier meant a cancelled or failed
+      // payment left the shopper with an empty cart and no way to "Try
+      // again" (PLAN.md, "Payment failed / cancelled": "offer to retry").
+      clear();
       router.push(`/order/confirmation/${orderId}`);
     } catch {
       setStatus("error");

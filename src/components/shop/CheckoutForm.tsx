@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/lib/cart-context";
@@ -17,7 +18,7 @@ import { getMessages } from "@/i18n";
  * "Continue" or "Confirm" (Appendix, "Checkout and pricing mechanics").
  */
 export function CheckoutForm() {
-  const { items, totalCents, clear } = useCart();
+  const { items, totalCents, removeItem } = useCart();
   const router = useRouter();
   const t = getMessages();
 
@@ -55,11 +56,28 @@ export function CheckoutForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message ?? t.checkout.genericError);
+        // Self-heal a stale cart (PLAN.md non-negotiable: never guess or
+        // retry blindly — but a productId the DB no longer has is not
+        // something retrying fixes either). Drop exactly what the server
+        // flagged and let the shopper resubmit with what's left, instead
+        // of a dead-end error that never goes away on its own.
+        if (Array.isArray(data.invalidProductIds) && data.invalidProductIds.length > 0) {
+          for (const id of data.invalidProductIds) {
+            removeItem(id);
+          }
+          setError(t.checkout.staleItemsRemoved);
+        } else {
+          setError(data.message ?? t.checkout.genericError);
+        }
         return;
       }
 
-      clear();
+      // Deliberately NOT clearing the cart here — the order exists and a
+      // payment attempt is starting, but nothing is confirmed yet. If
+      // this payment fails or is cancelled, the cart needs to still be
+      // there so "Try again" (payment-failed page) actually has
+      // something to retry. See MockPaymentContent's pay() for where
+      // clear() actually happens — on confirmed payment, not before.
       router.push(data.checkoutUrl);
     } catch {
       setError(t.checkout.connectionError);
@@ -69,6 +87,21 @@ export function CheckoutForm() {
   }
 
   if (items.length === 0) {
+    // Removing the last stale item empties the cart as a side effect —
+    // without this branch, the plain "cart is empty" message below would
+    // silently replace the explanation of why, right as it's shown.
+    if (error) {
+      return (
+        <div>
+          <p role="alert" className="text-sm text-red-700">
+            {error}
+          </p>
+          <Link href="/shop" className="mt-4 inline-flex items-center underline">
+            {t.notFound.backToShop}
+          </Link>
+        </div>
+      );
+    }
     return <p className="text-slate-700">{t.checkout.emptyCart}</p>;
   }
 
