@@ -3,11 +3,12 @@ import { getCookieConsent } from "@/lib/consent";
 import { CookiePreferencesForm } from "@/components/CookiePreferencesForm";
 import { getMessages } from "@/i18n";
 
-export const metadata: Metadata = { title: "Cookie preferences" };
+const t = getMessages();
+
+export const metadata: Metadata = { title: t.pageTitles.cookiePreferences };
 export const dynamic = "force-dynamic"; // reads the visitor's own cookie
 
 export default async function CookiePreferencesPage() {
-  const t = getMessages();
   const status = await getCookieConsent();
 
   return (

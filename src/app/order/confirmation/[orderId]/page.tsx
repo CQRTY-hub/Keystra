@@ -5,8 +5,10 @@ import { formatPriceCents } from "@/lib/currency";
 import { CopyKeyButton } from "@/components/shop/CopyKeyButton";
 import { getMessages } from "@/i18n";
 
+const t = getMessages();
+
 export const metadata: Metadata = {
-  title: "Order confirmed",
+  title: t.pageTitles.orderConfirmed,
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic"; // can contain a key — never cache
@@ -18,7 +20,6 @@ interface ConfirmationPageProps {
 export default async function OrderConfirmationPage({
   params,
 }: ConfirmationPageProps) {
-  const t = getMessages();
   const { orderId } = await params;
 
   const order = await prisma.order.findUnique({
@@ -79,7 +80,7 @@ export default async function OrderConfirmationPage({
                     <img
                       key={key.id}
                       src={`data:image/png;base64,${key.value}`}
-                      alt={`Key for ${item.product.title}`}
+                      alt={t.confirmation.keyImageAlt(item.product.title)}
                       className="mt-2 max-w-xs"
                     />
                   )

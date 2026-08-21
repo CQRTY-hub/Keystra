@@ -122,7 +122,17 @@ export function CheckoutForm() {
             className="h-5 w-5"
           />
         </span>
-        <span className="py-3 text-sm text-slate-900">{WITHDRAWAL_WAIVER_TEXT}</span>
+        <span className="py-3 text-sm text-slate-900">
+          {WITHDRAWAL_WAIVER_TEXT}{" "}
+          <a
+            href="/withdrawal-waiver?lang=nl"
+            className="underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            ({t.checkout.readInDutch})
+          </a>
+        </span>
       </label>
 
       <p className="text-lg font-medium">{t.checkout.total(formatPriceCents(totalCents))}</p>

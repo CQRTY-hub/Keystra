@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import faqEn from "@/i18n/faq.en";
 import { getMessages } from "@/i18n";
 
-export const metadata: Metadata = { title: "FAQ" };
+const t = getMessages();
+
+export const metadata: Metadata = { title: t.pageTitles.faq };
 export const revalidate = 3600;
 
 export default function FaqPage() {
-  const t = getMessages();
-
   return (
     <div className="max-w-3xl">
       <h1 className="text-2xl font-semibold">{t.faq.title}</h1>

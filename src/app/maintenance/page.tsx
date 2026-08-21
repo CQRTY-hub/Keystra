@@ -13,15 +13,15 @@ import { getMessages } from "@/i18n";
  * Order lookup keeps working at every kill-switch level, including full
  * maintenance (PLAN.md, Phase 3.5) — hence the link stays here too.
  */
+const t = getMessages();
+
 export const metadata: Metadata = {
-  title: "Maintenance",
+  title: t.pageTitles.maintenance,
   robots: { index: false, follow: false },
 };
 export const revalidate = 3600;
 
 export default function MaintenancePage() {
-  const t = getMessages();
-
   return (
     <div>
       <h1 className="text-2xl font-semibold">{t.maintenance.title}</h1>

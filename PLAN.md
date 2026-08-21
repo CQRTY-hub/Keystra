@@ -247,8 +247,9 @@ test catalogue and test codes only.
 
 A bad key goes through a support form with screenshots. Confirmed by support: **reportable
 up to 1 year from purchase**, and **CodesWholesale has up to 14 business days to provide a
-solution**, though most cases resolve sooner. There is also a **separate complaint API** —
-ask for those docs before building this part.
+solution**, though most cases resolve sooner. There is a **dedicated Complaints API** —
+same v3 authorization, supports submitting claims, attaching screenshots, and querying claim
+status. Must be activated by CodesWholesale per account once the shop is live.
 
 The one-year window is generous. The 14 business days is the problem: that's three calendar
 weeks, and no customer waits three weeks for a key that doesn't work. So there's a policy
@@ -270,12 +271,28 @@ Consequences already reflected in the plan:
 - The support widget must never resolve a faulty-key claim. Never.
 - Keys must never be duplicated or re-issued from my own database. One key, one order.
 - Track open supplier claims in the admin: what was claimed, when, and whether the
-  reimbursement ever arrived. Otherwise money quietly leaks.
+  reimbursement ever arrived. The Complaints API exposes claim status, so poll it and
+  surface open claims on the dashboard rather than tracking them by hand. Otherwise money
+  quietly leaks.
 
-### Still to confirm
+**Complaints API — confirmed, and it does what's needed.** A dedicated API, separate from
+the main one but using the same v3 authorization. It covers submitting a complaint,
+attaching the screenshots, **and querying the status of a claim** — so open claims can be
+tracked automatically in the admin instead of by hand. Documentation supplied by support.
 
-- Documentation for the separate complaint API.
-- Whether a low-balance notification can post back to me automatically.
+**Access is enabled per account once the shop is connected and running**, so it has to be
+requested from them at launch. Put it on the go-live checklist: it's exactly the kind of
+task that gets forgotten until the first faulty key arrives.
+
+**No webhook for low balance** — those warnings go by email only. The balance is available
+via `GET /v3/accounts/current`, so **poll it** and raise my own alert at my own threshold.
+Check it on the same schedule as the catalogue sync, and again before and after placing
+orders. That's also what feeds the daily spend ceiling and the auto-pause circuit breaker
+in Phase 3.5.
+
+### Nothing outstanding with the supplier
+
+All questions answered. Remaining supplier work is implementation in Phase 3.
 
 **Deliverable:** sandbox credentials (public — just take them from the docs). Then we design
 `CodesWholesaleProvider` against the sandbox rather than against assumptions.
@@ -1097,12 +1114,39 @@ three of these before the site is publicly reachable:
 - **Supabase Spend Cap enabled.** Supabase name attacks and software bugs as exactly the
   scenarios that produce runaway usage. Leaving the cap off is the single biggest billing
   danger on that platform.
-- **Cloudflare in front of the domain (free tier).** DDoS protection, WAF, bot filtering
-  and rate limiting at the edge. This matters more than the application-level rate limits
-  already in the plan: those still cost a function invocation per blocked request, whereas
-  Cloudflare drops junk before it reaches Vercel and before it's billable.
+- **Edge protection: Vercel's own firewall first, Cloudflare only if needed.** Vercel
+  already provides DDoS mitigation, a configurable firewall and a WAF, which overlaps most
+  of what Cloudflare would add. Running both means two layers doing DNS, caching and rules
+  — more complexity than a one-person shop needs, and misconfiguration produces caching
+  bugs that are miserable to debug.
 
-Ordering matters — edge blocking first, application rate limits second, spend caps as the
+  **Decision: point keystra.eu straight at Vercel and configure Vercel's firewall.** What
+  to set up there, in order:
+
+  **Rate limiting on the routes that matter here.** This shop has no login, no registration
+  and no password reset, so credential stuffing doesn't apply. Three endpoints need the
+  treatment anyway:
+  - **Order lookup** — the most important one. It returns a resellable key, which makes it
+    my real authentication endpoint even though it doesn't feel like one. Tight per-IP and
+    per-email limits, plus an alert on repeated failures.
+  - **Checkout / payment initiation** — limit per IP. Rapid repeated attempts are card
+    testing.
+  - **Admin login** — strict limits, plus an alert on any failed burst.
+
+  **WAF rules for the OWASP Top 10** — SQL injection in query strings, XSS in form fields,
+  path traversal in URLs. Prisma's parameterised queries already make injection unlikely,
+  but defence in depth is free here.
+
+  **Verify the rules actually block**, rather than assuming. Fire a burst at order lookup
+  yourself and confirm it's stopped. An unverified rule gives exactly the false confidence
+  it was meant to remove.
+
+  **When to add Cloudflare after all:** if real scraping or attack traffic shows up, or if
+  the Vercel bill starts climbing from junk requests. Cloudflare blocks *before* Vercel, so
+  blocked traffic costs no function invocations — that's the reason to reach for it, and
+  it's a ten-minute DNS change when the moment comes. Not a launch requirement.
+
+Ordering matters — Vercel firewall rules first, application rate limits second, spend caps as the
 backstop. And the supplier balance ceiling in Phase 3.5 covers the more expensive version of
 this problem: compute overspend is a bad month, but automated orders draining prepaid
 supplier balance is real inventory gone.

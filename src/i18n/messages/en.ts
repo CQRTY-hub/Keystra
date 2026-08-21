@@ -15,6 +15,43 @@
  * mixed into general UI copy.
  */
 const en = {
+  site: {
+    titleDefault: "Storefront (working title)",
+    titleTemplate: "%s — Storefront (working title)",
+    description: "Digital game keys, gift cards and top-up codes.",
+  },
+
+  // <title>/metadata strings. Separate from the rest since they're read
+  // at module scope in a page's `export const metadata`, not inside a
+  // component body — but still shown to a shopper (browser tab, search
+  // results, shared links), so they go through the catalog like
+  // everything else. Guide page titles aren't here — they come from
+  // their own content module (src/i18n/guides/*.en.ts) since the title
+  // IS the guide's own heading.
+  pageTitles: {
+    home: "Storefront (working title)",
+    shop: "Shop",
+    checkout: "Checkout",
+    mockPayment: "Mock payment",
+    paymentFailed: "Payment failed",
+    orderConfirmed: "Order confirmed",
+    trackOrder: "Track your order",
+    cookiePreferences: "Cookie preferences",
+    guidesIndex: "Redemption guides",
+    faq: "FAQ",
+    about: "About",
+    contact: "Contact",
+    terms: "Terms and conditions",
+    privacy: "Privacy policy",
+    refundPolicy: "Refund policy",
+    withdrawalWaiver: "Withdrawal waiver",
+    maintenance: "Maintenance",
+  },
+
+  languageToggle: {
+    ariaLabel: "Language",
+  },
+
   nav: {
     brand: "Storefront (working title)",
     skipToContent: "Skip to content",
@@ -94,6 +131,7 @@ const en = {
     termsPrefix: "I agree to the ",
     termsLink: "terms and conditions",
     termsSuffix: ".",
+    readInDutch: "Read in Dutch",
     total: (amount: string) => `Total: ${amount}`,
     submit: "Order with obligation to pay",
     submitting: "Processing…",
@@ -135,6 +173,7 @@ const en = {
     completedEmailedTo: (email: string) => `We've also emailed your key to ${email}.`,
     processing:
       "We're processing your order. This page will show your key as soon as it's ready.",
+    keyImageAlt: (title: string) => `Key for ${title}`,
   },
 
   orderLookup: {

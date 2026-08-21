@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getMessages } from "@/i18n";
 
-export const metadata: Metadata = { title: "Redemption guides" };
+const t = getMessages();
+
+export const metadata: Metadata = { title: t.pageTitles.guidesIndex };
 export const revalidate = 3600;
 
 const GUIDES = [
@@ -12,8 +14,6 @@ const GUIDES = [
 ];
 
 export default function GuidesIndexPage() {
-  const t = getMessages();
-
   return (
     <div>
       <h1 className="text-2xl font-semibold">{t.guidesIndex.title}</h1>

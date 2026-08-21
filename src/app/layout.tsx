@@ -5,12 +5,14 @@ import { CartProvider } from "@/lib/cart-context";
 import { CookieConsent } from "@/components/CookieConsent";
 import { getMessages } from "@/i18n";
 
+const siteMessages = getMessages();
+
 export const metadata: Metadata = {
   title: {
-    default: "Storefront (working title)",
-    template: "%s — Storefront (working title)",
+    default: siteMessages.site.titleDefault,
+    template: siteMessages.site.titleTemplate,
   },
-  description: "Digital game keys, gift cards and top-up codes.",
+  description: siteMessages.site.description,
 };
 
 export default function RootLayout({

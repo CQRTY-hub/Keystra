@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import privacyEn from "@/i18n/legal/privacy.en";
 import { getMessages } from "@/i18n";
 
-export const metadata: Metadata = { title: "Privacy policy" };
+const t = getMessages();
+
+export const metadata: Metadata = { title: t.pageTitles.privacy };
 export const revalidate = 3600;
 
 export default function PrivacyPage() {
-  const t = getMessages();
-
   return (
     <article className="max-w-3xl">
       <h1 className="text-2xl font-semibold">{t.privacy.title}</h1>

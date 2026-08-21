@@ -4,7 +4,9 @@ import { getProducts } from "@/lib/products";
 import { getMessages } from "@/i18n";
 import type { ProductCategory } from "@/types/product";
 
-export const metadata: Metadata = { title: "Shop" };
+const t = getMessages();
+
+export const metadata: Metadata = { title: t.pageTitles.shop };
 export const revalidate = 3600;
 
 const CATEGORIES: ProductCategory[] = ["game_key", "gift_card", "top_up"];
@@ -14,7 +16,6 @@ interface ShopPageProps {
 }
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
-  const t = getMessages();
   const { category, region, q } = await searchParams;
   const allProducts = await getProducts();
 
