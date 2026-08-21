@@ -23,7 +23,15 @@ export async function POST(req: NextRequest) {
   }
 
   const order = await prisma.order.findFirst({
-    where: { id: parsed.data.orderId, customerEmail: parsed.data.email },
+    where: {
+      id: parsed.data.orderId.trim(),
+      // Case-insensitive: email casing carries no meaning to a shopper,
+      // and "I typed it correctly but it says not found" because
+      // checkout stored "Name@Example.com" and lookup got "name@..."
+      // is exactly the kind of self-inflicted lockout self-service
+      // order lookup exists to avoid.
+      customerEmail: { equals: parsed.data.email.trim(), mode: "insensitive" },
+    },
     select: { id: true },
   });
 

@@ -48,8 +48,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { email, items, termsAccepted, withdrawalWaiverAccepted } =
-    parsed.data;
+  const { items, termsAccepted, withdrawalWaiverAccepted } = parsed.data;
+  // Normalized once, here, so every downstream use (the stored order,
+  // the confirmation/held/awaiting-code emails, order lookup later) is
+  // consistent regardless of how the shopper capitalized it. Order
+  // lookup also compares case-insensitively as a second line of defence
+  // for orders that predate this normalization.
+  const email = parsed.data.email.trim().toLowerCase();
 
   const fulfillment = getFulfillmentProvider();
 
