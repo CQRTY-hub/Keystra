@@ -9,6 +9,7 @@
  * legal texts for the same consent action.
  */
 const withdrawalWaiverNl = {
+  title: "Verklaring afstand herroepingsrecht",
   text: "Ik ga ermee akkoord dat de levering van dit digitale product onmiddellijk mag starten, en ik erken dat ik daardoor mijn wettelijk herroepingsrecht van 14 dagen verlies zodra de key aan mij is getoond of gemaild.",
 } as const;
 

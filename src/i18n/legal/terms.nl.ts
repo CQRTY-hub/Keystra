@@ -8,6 +8,7 @@
  * text, just the same content made comprehensible.
  */
 const termsNl = {
+  title: "Algemene voorwaarden",
   paragraphs: [
     "PLACEHOLDER — deze tekst is nog niet door een jurist nagekeken en mag niet live gaan zonder die controle (zie PLAN.md, Appendix). Ze dient hier alleen om de paginastructuur te tonen.",
     "Deze shop verkoopt uitsluitend aan particuliere consumenten, niet aan bedrijven. Wat je koopt is een licentiesleutel voor software van een derde partij, niet het spel zelf — inwisselen is onderhevig aan de eigen voorwaarden van de platformhouder.",

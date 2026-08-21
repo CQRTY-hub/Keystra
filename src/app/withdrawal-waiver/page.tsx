@@ -1,18 +1,27 @@
 import type { Metadata } from "next";
 import { WITHDRAWAL_WAIVER_VERSION, WITHDRAWAL_WAIVER_TEXT } from "@/lib/consent-text";
 import withdrawalWaiverNl from "@/i18n/legal/withdrawal-waiver.nl";
-import { parseContentLocale } from "@/i18n/content-locale";
+import { parseContentLocale, languageAlternates } from "@/i18n/content-locale";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { getMessages } from "@/i18n";
 
 const t = getMessages();
 
-export const metadata: Metadata = { title: t.pageTitles.withdrawalWaiver };
-export const revalidate = 3600;
-
 interface WithdrawalWaiverPageProps {
   searchParams: Promise<{ lang?: string }>;
 }
+
+export async function generateMetadata({
+  searchParams,
+}: WithdrawalWaiverPageProps): Promise<Metadata> {
+  const locale = parseContentLocale((await searchParams).lang);
+  return {
+    title: locale === "nl" ? withdrawalWaiverNl.title : t.pageTitles.withdrawalWaiver,
+    alternates: languageAlternates("/withdrawal-waiver"),
+  };
+}
+
+export const revalidate = 3600;
 
 /**
  * Reference-only page: shows the exact withdrawal-waiver text a buyer
@@ -28,11 +37,12 @@ export default async function WithdrawalWaiverPage({
 }: WithdrawalWaiverPageProps) {
   const locale = parseContentLocale((await searchParams).lang);
   const text = locale === "nl" ? withdrawalWaiverNl.text : WITHDRAWAL_WAIVER_TEXT;
+  const title = locale === "nl" ? withdrawalWaiverNl.title : t.pageTitles.withdrawalWaiver;
 
   return (
     <article className="max-w-3xl">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">{t.pageTitles.withdrawalWaiver}</h1>
+        <h1 className="text-2xl font-semibold">{title}</h1>
         <LanguageToggle current={locale} basePath="/withdrawal-waiver" />
       </div>
       <p className="text-sm text-slate-500">

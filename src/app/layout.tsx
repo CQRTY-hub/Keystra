@@ -8,6 +8,10 @@ import { getMessages } from "@/i18n";
 const siteMessages = getMessages();
 
 export const metadata: Metadata = {
+  // Lets every page below set relative canonical/hreflang URLs (see
+  // /terms, /refund-policy, /withdrawal-waiver, /guides/*) instead of
+  // each needing to know the full site origin.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: siteMessages.site.titleDefault,
     template: siteMessages.site.titleTemplate,

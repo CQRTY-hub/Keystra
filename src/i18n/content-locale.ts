@@ -14,3 +14,21 @@ export const DEFAULT_CONTENT_LOCALE: ContentLocale = "en";
 export function parseContentLocale(value: string | undefined): ContentLocale {
   return value === "nl" ? "nl" : DEFAULT_CONTENT_LOCALE;
 }
+
+/**
+ * Canonical + hreflang for a page with an English default and a
+ * `?lang=nl` variant. The English URL is canonical — `?lang=nl` is a
+ * view of the same page, not a separately-indexed one — with hreflang
+ * pointing search engines at both so a Dutch searcher gets offered the
+ * Dutch variant instead of the page just quietly claiming to be English
+ * (which is what a static, always-English <title> effectively did).
+ */
+export function languageAlternates(basePath: string) {
+  return {
+    canonical: basePath,
+    languages: {
+      en: basePath,
+      nl: `${basePath}?lang=nl`,
+    },
+  };
+}
