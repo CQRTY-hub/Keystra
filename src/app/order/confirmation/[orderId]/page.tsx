@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPriceCents } from "@/lib/currency";
-import { CopyKeyButton } from "@/components/shop/CopyKeyButton";
+import { CopyButton } from "@/components/shop/CopyButton";
 import { getMessages } from "@/i18n";
 
 const t = getMessages();
@@ -36,9 +36,13 @@ export default async function OrderConfirmationPage({
   return (
     <div>
       <h1 className="text-2xl font-semibold">{t.confirmation.title}</h1>
-      <p className="mt-2 text-slate-700">
-        {t.confirmation.orderStatus(order.id, order.status)}
-      </p>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <span className="text-slate-700">{t.confirmation.orderNumberLabel}:</span>
+        <span className="font-mono text-sm">{order.id}</span>
+        <CopyButton value={order.id} />
+      </div>
+      <p className="mt-1 text-slate-700">{t.confirmation.statusLabel(order.status)}</p>
 
       {order.status === "held" && (
         <p className="mt-4 rounded border border-slate-300 bg-slate-50 p-4">
@@ -73,7 +77,7 @@ export default async function OrderConfirmationPage({
                       <p className="min-w-0 flex-1 break-all font-mono text-sm">
                         {key.value}
                       </p>
-                      <CopyKeyButton value={key.value} />
+                      <CopyButton value={key.value} />
                     </div>
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element

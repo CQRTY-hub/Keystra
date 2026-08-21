@@ -39,13 +39,19 @@ export function OrderLookupForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-4">
-      <Input
-        id="order-id"
-        label={t.orderLookup.orderId}
-        required
-        value={orderId}
-        onChange={(e) => setOrderId(e.target.value)}
-      />
+      <div>
+        <Input
+          id="order-id"
+          label={t.orderLookup.orderId}
+          required
+          value={orderId}
+          onChange={(e) => setOrderId(e.target.value)}
+          aria-describedby="order-id-hint"
+        />
+        <p id="order-id-hint" className="mt-1 text-sm text-slate-500">
+          {t.orderLookup.orderIdHint}
+        </p>
+      </div>
       <Input
         id="lookup-email"
         label={t.orderLookup.email}

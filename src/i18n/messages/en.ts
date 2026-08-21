@@ -167,7 +167,14 @@ const en = {
 
   confirmation: {
     title: "Thank you for your order",
-    orderStatus: (id: string, status: string) => `Order ${id} — status: ${status}`,
+    // Its own label + copy button, same treatment as the key — this is
+    // deliberately not folded into one sentence with the status. That
+    // used to read as plain text with nothing to copy, and the key's
+    // bordered box + copy button made the KEY look like "the code to
+    // save" instead. A customer typed the key into order lookup's
+    // "Order number" field because of exactly that visual mix-up.
+    orderNumberLabel: "Order number",
+    statusLabel: (status: string) => `Status: ${status}`,
     heldBody: (email: string) =>
       `Something went wrong delivering your key. We're looking into it personally and will reach out at ${email}.`,
     awaitingCodeBody: (email: string) =>
@@ -182,13 +189,15 @@ const en = {
     title: "Track your order",
     intro: "Enter your order number and email address. No account needed.",
     orderId: "Order number",
+    orderIdHint:
+      "Not the key — the order number is on your confirmation page and in your confirmation email.",
     email: "Email address",
     notFound: "No order found with that combination.",
     search: "Search",
     searching: "Searching…",
   },
 
-  copyKey: {
+  copyButton: {
     copy: "Copy",
     copied: "Copied!",
     srSuffix: " to clipboard",

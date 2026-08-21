@@ -4,12 +4,13 @@ import { useState } from "react";
 import { getMessages } from "@/i18n";
 
 /**
- * PLAN.md, "Mobile is the primary device": a long key on a narrow screen
- * is close to impossible to select with a thumb, and this is the most
- * important moment in the transaction — it can't be fiddly. 44px minimum
- * tap target (h-11 = 44px in Tailwind's default scale).
+ * Generic copy-to-clipboard button — used for both the delivered key and
+ * the order number on the confirmation page. PLAN.md, "Mobile is the
+ * primary device": a long value on a narrow screen is close to
+ * impossible to select with a thumb. 44px minimum tap target (h-11 =
+ * 44px in Tailwind's default scale).
  */
-export function CopyKeyButton({ value }: { value: string }) {
+export function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
   const t = getMessages();
 
@@ -20,7 +21,7 @@ export function CopyKeyButton({ value }: { value: string }) {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard API can be unavailable (permissions, non-secure
-      // context). The key stays visible and selectable regardless —
+      // context). The value stays visible and selectable regardless —
       // this button is a convenience, never the only way to get it.
     }
   }
@@ -31,8 +32,8 @@ export function CopyKeyButton({ value }: { value: string }) {
       onClick={handleCopy}
       className="inline-flex h-11 shrink-0 items-center justify-center rounded border border-slate-300 px-4 text-sm font-medium hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
     >
-      {copied ? t.copyKey.copied : t.copyKey.copy}
-      <span className="sr-only">{t.copyKey.srSuffix}</span>
+      {copied ? t.copyButton.copied : t.copyButton.copy}
+      <span className="sr-only">{t.copyButton.srSuffix}</span>
     </button>
   );
 }
