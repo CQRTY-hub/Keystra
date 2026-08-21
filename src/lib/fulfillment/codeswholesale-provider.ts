@@ -47,10 +47,26 @@ import type {
  * - `GET /v3/orders/{orderId}/invoice`, `GET /v3/codes/{codeId}`,
  *   `GET /v3/platforms`, `GET /v3/regions`, `GET /v3/territory`,
  *   `GET /v3/languages`, `GET /v3/products/{productId}/description`,
- *   `GET /v3/productImages/{id}` — rate limits not published for any of
- *   these; confirm before relying on a call volume for them.
+ *   `GET /v3/productImages/{id}`, `GET /v3/accounts/current` — rate
+ *   limits not published for any of these; confirm before relying on a
+ *   call volume for them.
+ * - The Complaints API (see CodesWholesaleComplaintsProvider at the
+ *   bottom of this file) — genuinely separate API, same v3 auth, own
+ *   docs, own (unpublished) rate limits. Not the same base path as
+ *   everything above.
  * - Order placement — exact v3 path not yet confirmed against current
  *   docs (PLAN.md doesn't give it). Verify before implementing orderKey.
+ *
+ * ## No webhook for low balance
+ * Those warnings go by email only (PLAN.md, Phase 0.5). The balance is
+ * available via `GET /v3/accounts/current` — see checkAccountBalance()
+ * below — so it has to be polled: on the same schedule as
+ * syncCatalog/syncReferenceData, and again immediately before and after
+ * placing an order, since a fulfilment attempt is exactly the moment an
+ * empty balance actually bites. Comparing the number against my own
+ * alert threshold and actually raising the alert is Phase 3.5 work (the
+ * daily spend ceiling and auto-pause circuit breaker) — nothing here
+ * decides what "low" means, it only fetches the figure.
  *
  * ## Reminders from PLAN.md that apply specifically here
  * - Pricing is tiered by quantity — for one-key-at-a-time fulfilment,
@@ -83,6 +99,10 @@ export class CodesWholesaleProvider implements FulfillmentProvider {
     // a failure, it's a valid "awaiting_code" outcome. On success, also
     // call fetchSupplierInvoice() below for this order — PLAN.md wants
     // the supplier invoice pulled and filed automatically, not by hand.
+    // Also call checkAccountBalance() below both before and after this
+    // order — PLAN.md is explicit that a fulfilment attempt is exactly
+    // the moment an empty balance actually bites, not just something to
+    // find out about on the next scheduled poll.
     throw new Error("CodesWholesaleProvider is not implemented yet.");
   }
 
@@ -127,6 +147,26 @@ export class CodesWholesaleProvider implements FulfillmentProvider {
    */
   async retrieveCode(_codeId: string): Promise<KeyResult> {
     throw new Error("CodesWholesaleProvider.retrieveCode is not implemented yet.");
+  }
+
+  /**
+   * TODO(Phase 3): GET /v3/accounts/current, authenticated via
+   * getAccessToken(). Returns the current balance including credit —
+   * there's no webhook for this (PLAN.md, Phase 0.5: "those warnings go
+   * by email only"), so it's polled: on the same schedule as
+   * syncCatalog/syncReferenceData below, and again immediately before
+   * and after orderKey() (see that TODO). Deliberately returns just the
+   * raw figure — deciding what counts as "low" and actually raising the
+   * alert is Phase 3.5's daily spend ceiling / auto-pause circuit
+   * breaker, not this method's job.
+   *
+   * Not part of FulfillmentProvider: this is account-level, not
+   * per-product, and the mock has no real supplier balance to report.
+   */
+  async checkAccountBalance(): Promise<{ balanceCents: number }> {
+    throw new Error(
+      "CodesWholesaleProvider.checkAccountBalance is not implemented yet."
+    );
   }
 }
 
@@ -295,5 +335,67 @@ export async function syncReferenceData(): Promise<void> {
 export async function fetchProductContent(_productId: string): Promise<unknown> {
   throw new Error(
     "CodesWholesaleProvider.fetchProductContent is not implemented yet."
+  );
+}
+
+// ---------------------------------------------------------------------
+// Complaints API
+// ---------------------------------------------------------------------
+//
+// PLAN.md, Phase 0.5: a genuinely separate API from the one
+// CodesWholesaleProvider talks to above — its own base path and docs,
+// same v3 client-credentials auth. Confirmed by support to cover
+// submitting a complaint, attaching screenshots, and querying claim
+// status, so open claims can be tracked automatically instead of by
+// hand. The exact request/response shapes below are TODOs, not
+// confirmed — support supplied separate documentation for this API that
+// hasn't been read yet; verify before implementing any of it.
+//
+// Access has to be requested from CodesWholesale and is only activated
+// per account once the shop is connected and running — it does not
+// exist in sandbox from day one the way the rest of this file does.
+// That request belongs on the go-live checklist (PLAN.md's own words:
+// "exactly the kind of task that gets forgotten until the first faulty
+// key arrives") — not something to chase down now.
+//
+// What this class is deliberately NOT for: resolving a faulty-key claim
+// automatically. PLAN.md and CLAUDE.md are both explicit that the
+// support widget must never resolve a faulty-key claim, ever — that
+// judgment call stays human, always. Every method here only ever gets
+// called from the Phase 3.5 admin, on someone actually clicking a
+// button — never from an automated job, never from anything a customer
+// interaction can trigger on its own.
+
+/**
+ * TODO(Phase 3.5, gated on CodesWholesale activating access): submits a
+ * complaint with the evidence the shop already requires (PLAN.md's
+ * four-screenshot policy). Exact request shape — multipart upload vs.
+ * a JSON body with encoded attachments, whether screenshots attach in
+ * the same call or a separate step — is not confirmed; check the
+ * Complaints API docs support supplied before implementing.
+ */
+export async function submitComplaint(_input: {
+  supplierOrderId: string;
+  codeId?: string;
+  description: string;
+  screenshots: unknown[];
+}): Promise<{ complaintId: string }> {
+  throw new Error(
+    "CodesWholesaleProvider.submitComplaint is not implemented yet."
+  );
+}
+
+/**
+ * TODO(Phase 3.5): queries the status of a previously submitted
+ * complaint — this is what lets open supplier claims be tracked
+ * automatically on the admin dashboard (PLAN.md: "poll it and surface
+ * open claims on the dashboard rather than tracking them by hand")
+ * instead of manually chasing CodesWholesale for an answer.
+ */
+export async function getComplaintStatus(
+  _complaintId: string
+): Promise<{ status: string }> {
+  throw new Error(
+    "CodesWholesaleProvider.getComplaintStatus is not implemented yet."
   );
 }
