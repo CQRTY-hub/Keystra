@@ -16,8 +16,8 @@
  */
 const en = {
   site: {
-    titleDefault: "Storefront (working title)",
-    titleTemplate: "%s — Storefront (working title)",
+    titleDefault: "Keystra",
+    titleTemplate: "%s — Keystra",
     description: "Digital game keys, gift cards and top-up codes.",
   },
 
@@ -29,7 +29,7 @@ const en = {
   // their own content module (src/i18n/guides/*.en.ts) since the title
   // IS the guide's own heading.
   pageTitles: {
-    home: "Storefront (working title)",
+    home: "Keystra",
     shop: "Shop",
     checkout: "Checkout",
     mockPayment: "Mock payment",
@@ -53,7 +53,7 @@ const en = {
   },
 
   nav: {
-    brand: "Storefront (working title)",
+    brand: "Keystra",
     skipToContent: "Skip to content",
     mainNavigation: "Main navigation",
     shop: "Shop",

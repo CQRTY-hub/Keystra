@@ -1,4 +1,4 @@
-# Storefront (werktitel)
+# Keystra
 
 Webshop voor digitale game keys. Zie [PLAN.md](./PLAN.md) voor het volledige
 bouwplan en [CLAUDE.md](./CLAUDE.md) voor de standing rules die elke sessie
