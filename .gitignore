@@ -27,3 +27,10 @@ npm-debug.log*
 .vercel
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code: personal-local settings, never shared/committed
+.claude/settings.local.json
+# Locally-installed skills (e.g. `npx impeccable install`) — regenerable
+# third-party content, same reasoning as node_modules. .claude/launch.json
+# and any other project-level .claude/ config stay tracked.
+.claude/skills/
