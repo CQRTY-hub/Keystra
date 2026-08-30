@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { AddToCartButton } from "@/components/shop/AddToCartButton";
 import { getProductById, getProducts } from "@/lib/products";
 import { formatPriceCents } from "@/lib/currency";
@@ -42,12 +43,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">{product.title}</h1>
-      <div className="mt-2 flex gap-2">
+      <PageTitleBand title={product.title} />
+      <div className="mt-4 flex gap-2">
         <Badge>{t.category[product.category]}</Badge>
         <Badge>{product.region}</Badge>
       </div>
-      <p className="mt-4 text-xl font-medium">
+      <p className="text-headline-md mt-4 text-on-surface">
         {formatPriceCents(product.priceCents)}
       </p>
 
@@ -56,19 +57,35 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
 
       <section className="mt-8">
-        <h2 className="text-lg font-medium">{t.product.redemptionTitle}</h2>
-        <p className="mt-2 text-slate-700">{t.product.redemptionBody}</p>
+        <h2 className="text-title-sm text-on-surface">{t.product.redemptionTitle}</h2>
+        <p className="text-body-md mt-2 text-secondary">{t.product.redemptionBody}</p>
         <p className="mt-2">
-          <Link href={GUIDE_ROUTES[product.category]} className="underline">
+          <Link
+            href={GUIDE_ROUTES[product.category]}
+            className="text-secondary underline hover:text-primary"
+          >
             {t.product.howToRedeem}
           </Link>
         </p>
       </section>
 
       <section className="mt-6">
-        <h2 className="text-lg font-medium">{t.product.regionTitle}</h2>
-        <p className="mt-2 text-slate-700">{t.product.regionBody(product.region)}</p>
+        <h2 className="text-title-sm text-on-surface">{t.product.regionTitle}</h2>
+        <p className="text-body-md mt-2 text-secondary">{t.product.regionBody(product.region)}</p>
       </section>
+
+      {/* Informatieverplichtingen-toetsing.md, finding 2.3: the guideline
+          recommends a link to the withdrawal-right/refund information
+          right from the product fiche, not only reachable later via the
+          footer or the checkout page. */}
+      <p className="mt-6">
+        <Link
+          href="/refund-policy"
+          className="text-secondary underline hover:text-primary"
+        >
+          {t.product.withdrawalLinkLabel}
+        </Link>
+      </p>
     </div>
   );
 }

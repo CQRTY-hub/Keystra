@@ -18,18 +18,21 @@ export function LanguageToggle({
   const t = getMessages();
 
   return (
-    <nav aria-label={t.languageToggle.ariaLabel} className="flex gap-3 text-sm">
+    <nav aria-label={t.languageToggle.ariaLabel} className="text-body-md flex gap-3">
       {current === "en" ? (
-        <span className="font-medium underline">English</span>
+        <span className="text-on-surface underline">English</span>
       ) : (
-        <Link href={basePath} className="hover:underline">
+        <Link href={basePath} className="text-secondary hover:text-primary hover:underline">
           English
         </Link>
       )}
       {current === "nl" ? (
-        <span className="font-medium underline">Nederlands</span>
+        <span className="text-on-surface underline">Nederlands</span>
       ) : (
-        <Link href={`${basePath}?lang=nl`} className="hover:underline">
+        <Link
+          href={`${basePath}?lang=nl`}
+          className="text-secondary hover:text-primary hover:underline"
+        >
           Nederlands
         </Link>
       )}

@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { getMessages } from "@/i18n";
 
 function PaymentFailedInner() {
@@ -12,20 +13,24 @@ function PaymentFailedInner() {
 
   return (
     <div className="max-w-md">
-      <h1 className="text-2xl font-semibold">{t.paymentFailed.title}</h1>
-      <p className="mt-2 text-slate-700">{t.paymentFailed.body}</p>
+      <PageTitleBand title={t.paymentFailed.title} />
+      <p className="text-body-md mt-4 text-secondary">{t.paymentFailed.body}</p>
       <div className="mt-6 flex gap-4">
+        {/* Retrying re-enters checkout, it isn't itself the buy action —
+            stays secondary, same reasoning as cart's "go to checkout". */}
         <Link
           href="/checkout"
-          className="inline-flex items-center justify-center rounded bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700"
+          className="text-title-sm inline-flex items-center justify-center rounded-keystra border border-secondary px-4 py-2 text-secondary hover:bg-container"
         >
           {t.paymentFailed.retry}
         </Link>
-        <Link href="/cart" className="inline-flex items-center underline">
+        <Link href="/cart" className="flex items-center text-secondary underline hover:text-primary">
           {t.paymentFailed.backToCart}
         </Link>
       </div>
-      {orderId && <p className="mt-4 text-sm text-slate-500">Order {orderId}</p>}
+      {orderId && (
+        <p className="text-body-md mt-4 text-secondary">Order {orderId}</p>
+      )}
     </div>
   );
 }

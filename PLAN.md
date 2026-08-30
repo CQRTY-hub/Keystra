@@ -712,6 +712,63 @@ identity stalls.
 
 ---
 
+### Animated banners — the hero and the page bands
+
+The homepage hero and the narrow band that repeats on every other page are currently
+static. Animating them is a Phase 2 decision, deliberately deferred until the design is
+settled and the shop is live.
+
+**What to animate, and only this:** a slow ambient movement inside the dark gradient —
+drifting light, a slow parallax of layered shapes, a subtle shimmer along one edge. It runs
+once on load and then settles, or loops so slowly the visitor never consciously notices it.
+
+**What never to animate here:** anything that draws the eye away from the buy button,
+anything that repeats fast enough to register as motion, and anything that delays the page
+being usable.
+
+**Technical approach, cheapest first:**
+
+1. **CSS only** — an animated gradient position or a slow transform on a layered background.
+   Costs nothing, needs no library, works everywhere. Try this first.
+2. **A looping video or animated SVG** — more expressive, but adds weight to the heaviest
+   element on the page. Only if CSS can't carry the idea.
+3. **Motion (the library)** — only if the movement genuinely needs to be interactive or
+   state-driven. See the bundle-size note above.
+
+**Non-negotiable regardless of approach:**
+
+- **Respect `prefers-reduced-motion`.** Some people get motion sick; the site must be fully
+  usable and still look finished with animation off.
+- **Never block first paint.** The band renders immediately; the motion starts after.
+- **Mobile first.** Most visitors arrive from TikTok on a phone. If the animation costs
+  battery or stutters on a mid-range Android, it is not worth having.
+- The narrow page bands get **less** movement than the homepage hero, or none. The hero is
+  an arrival moment; the bands are furniture.
+
+**Sequence:** run `find-animation-opportunities` first, then implement the hero, then
+decide whether the bands need it at all. It is entirely acceptable to animate the hero only.
+
+### Libraries evaluated for this phase
+
+Three candidates were looked at before starting. Notes so this isn't re-litigated:
+
+- **anime.js** — the strongest fit of the three, for one-off scripted effects: the key
+  reveal on the confirmation page, and the 404 / 500 pages. **But check whether Motion can
+  already do it** before installing a second animation engine. Two libraries for one job is
+  dead weight.
+- **KokonutUI** — 100+ animated components on Tailwind, shadcn/ui and Motion, MIT.
+  **Browse it for ideas; copy nothing.** These components carry their own design decisions,
+  and this project has its own token system from Stitch. Pasting them in imports someone
+  else's design language into a system that took real work to define — the same
+  "two styles mixed together" problem I rejected on G2A. See something good, rebuild it
+  with my own tokens.
+- **Bklit** — charts and data visualisation, MIT, shadcn registry, built on Visx and Motion.
+  **Skipped.** The admin panel has exactly one user: me. Charts there are decoration, not
+  value. Revisit only if a public stats page ever exists.
+
+**They all run on Motion.** Adding anime.js means two animation engines in one project —
+so pick one deliberately rather than accumulating both.
+
 ## Phase 3 — Real supplier, real payments
 
 Gated on Phase 0.5. Nothing in the shop or the design should need to change — that's the
@@ -1204,6 +1261,33 @@ Your existing four-screenshot evidence policy for wrong or faulty keys stays a h
 decision, always. The widget may *explain* what evidence is needed and *collect* it, which
 is genuinely useful and saves you a round trip — but the judgment call and the refund
 button remain yours.
+
+**The faulty-key intake flow — the one job worth building it for.**
+
+The widget's most valuable task is collecting a complete faulty-key report so I never have
+to go back and forth four times asking for screenshots. It gathers; I decide.
+
+What it does:
+- Explains what evidence is needed and collects the screenshots
+- Asks what exactly happened, on which platform, and what the error said
+- Looks up the order and confirms it exists, along with its region and category
+- Files a complete case in the admin panel with status "awaiting review", and tells the
+  customer honestly that a human will look at it and roughly how long that takes
+
+**Real filtering happens here**, because a good share of reports aren't faulty keys at all.
+A few questions catch these before they ever reach me:
+- A Steam key being redeemed on Epic, or the wrong platform generally
+- A region mismatch — an EU key on a Turkish account
+- A key that was already redeemed, by the customer, some time ago
+- A key typed by hand instead of copied
+
+**Where the line is, absolutely:**
+- It never says the key is genuinely faulty, never promises a refund or a replacement, and
+  never estimates the outcome — however obvious the case looks.
+- It never calls the Complaints API. That endpoint is only ever triggered by me clicking a
+  button in the admin panel, never by the widget and never by an automated job.
+- It is honest about timing: CodesWholesale can take up to 14 business days, and my own
+  policy on carrying that cost (see Phase 0.5) is my decision to communicate, not its.
 
 **Deliberately not doing:** anything autonomous. Claude watching the site and fixing things
 unsupervised sounds appealing and is how people wake up to a broken checkout at 3am.

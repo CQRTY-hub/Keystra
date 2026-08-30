@@ -19,7 +19,13 @@ export type CookieConsentValue = "accepted" | "rejected";
 // (PLAN.md, "Product scope and launch decisions" — English only at
 // launch). The wording itself changed, not just its language, so this
 // is a new version, not a translation of the old one in place.
-export const TERMS_VERSION = "2026-08-20";
+//
+// Bumped 2026-08-30: terms.en.ts rewritten to close the gaps found in
+// informatieverplichtingen-toetsing.md (trader identity, conformity
+// guarantee, ADR, VAT treatment, and more — see that file and
+// Design/juridische-vragen.md). Substantive wording change, not yet
+// reviewed by a lawyer — expect another bump once that review lands.
+export const TERMS_VERSION = "2026-08-30";
 export const WITHDRAWAL_WAIVER_VERSION = "2026-08-20";
 
 export const WITHDRAWAL_WAIVER_TEXT = withdrawalWaiverEn.text;

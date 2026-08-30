@@ -99,7 +99,7 @@ describe("MockFulfillmentProvider", () => {
       const result = await provider.assessRisk({
         orderId,
         customerEmail: MOCK_RISK_SCENARIO_EMAILS.high,
-        amountCents: 3999,
+        customerIpAddress: "203.0.113.1",
       });
       expect(result.riskScore).toBeGreaterThanOrEqual(result.suggestedHoldThreshold);
     });
@@ -108,7 +108,7 @@ describe("MockFulfillmentProvider", () => {
       const result = await provider.assessRisk({
         orderId,
         customerEmail: "ordinary-customer@example.com",
-        amountCents: 3999,
+        customerIpAddress: "203.0.113.1",
       });
       expect(result.riskScore).toBeLessThan(result.suggestedHoldThreshold);
     });
@@ -117,7 +117,7 @@ describe("MockFulfillmentProvider", () => {
       const result = await provider.assessRisk({
         orderId,
         customerEmail: "ordinary-customer@example.com",
-        amountCents: 3999,
+        customerIpAddress: "203.0.113.1",
       });
       expect(result.suggestedHoldThreshold).toBe(1.5);
     });

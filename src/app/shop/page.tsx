@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { getProducts } from "@/lib/products";
 import { getMessages } from "@/i18n";
 import type { ProductCategory } from "@/types/product";
@@ -32,15 +33,17 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">{t.shop.title}</h1>
+      <PageTitleBand title={t.shop.title} />
 
-      {/* Plain GET form — filtering and search both work without client JS. */}
+      {/* Plain GET form — filtering and search both work without client JS.
+          Not a buy action, so the submit button stays "secondary" (teal),
+          same rule as the homepage's search field. */}
       <form
-        className="mt-4 flex flex-wrap items-end gap-4"
+        className="mt-4 flex flex-wrap items-end gap-gutter"
         aria-label={t.shop.filtersLabel}
       >
         <div className="flex flex-col gap-1">
-          <label htmlFor="q" className="text-sm font-medium">
+          <label htmlFor="q" className="text-title-sm text-on-surface">
             {t.shop.searchLabel}
           </label>
           <input
@@ -49,19 +52,19 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
             type="search"
             defaultValue={q ?? ""}
             placeholder={t.shop.searchPlaceholder}
-            className="rounded border border-slate-300 px-3 py-2"
+            className="text-body-md rounded-keystra border border-outline bg-container-lowest px-3 py-2 text-on-surface placeholder:text-secondary"
           />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="category" className="text-sm font-medium">
+          <label htmlFor="category" className="text-title-sm text-on-surface">
             {t.shop.categoryLabel}
           </label>
           <select
             id="category"
             name="category"
             defaultValue={category ?? ""}
-            className="rounded border border-slate-300 px-3 py-2"
+            className="text-body-md rounded-keystra border border-outline bg-container-lowest px-3 py-2 text-on-surface"
           >
             <option value="">{t.shop.categoryAll}</option>
             {CATEGORIES.map((c) => (
@@ -73,14 +76,14 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="region" className="text-sm font-medium">
+          <label htmlFor="region" className="text-title-sm text-on-surface">
             {t.shop.regionLabel}
           </label>
           <select
             id="region"
             name="region"
             defaultValue={region ?? ""}
-            className="rounded border border-slate-300 px-3 py-2"
+            className="text-body-md rounded-keystra border border-outline bg-container-lowest px-3 py-2 text-on-surface"
           >
             <option value="">{t.shop.regionAll}</option>
             {regions.map((r) => (
@@ -93,16 +96,19 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
         <button
           type="submit"
-          className="rounded bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700"
+          className="text-title-sm rounded-keystra border border-secondary px-4 py-2 text-secondary hover:bg-container"
         >
           {t.shop.filterButton}
         </button>
       </form>
 
       {filtered.length === 0 ? (
-        <p className="mt-8 text-slate-700">{t.shop.noResults}</p>
+        <p className="text-body-md mt-8 text-secondary">{t.shop.noResults}</p>
       ) : (
-        <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        // Same compact ratio as the homepage's Trending Now grid — more
+        // products per row, smaller image, so mediocre supplier boxart
+        // has less room to stand out.
+        <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

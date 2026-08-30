@@ -12,12 +12,12 @@ export function KillSwitchNotice() {
   return (
     <div
       role="status"
-      className="rounded border border-slate-300 bg-slate-50 p-4 text-slate-900"
+      className="rounded-keystra border border-outline bg-container p-4 text-on-surface"
     >
-      <p className="font-medium">{t.killSwitch.title}</p>
-      <p className="mt-1 text-sm">
+      <p className="text-title-sm">{t.killSwitch.title}</p>
+      <p className="text-body-md mt-1 text-secondary">
         {t.killSwitch.bodyPrefix}
-        <a href="/order/lookup" className="underline">
+        <a href="/order/lookup" className="text-secondary underline hover:text-primary">
           {t.killSwitch.lookupLink}
         </a>
         {t.killSwitch.bodySuffix}

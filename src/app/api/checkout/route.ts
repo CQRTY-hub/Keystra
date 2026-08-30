@@ -6,6 +6,7 @@ import { getFulfillmentProvider } from "@/lib/fulfillment";
 import { createPayment } from "@/lib/payments/mollie-stub";
 import { recordCheckoutConsent } from "@/lib/consent";
 import { logEvent } from "@/lib/event-log";
+import { getClientIp } from "@/lib/request-ip";
 import { getMessages } from "@/i18n";
 
 const t = getMessages();
@@ -122,6 +123,11 @@ export async function POST(req: NextRequest) {
     data: {
       customerEmail: email,
       totalCents,
+      // Captured now, not reconstructable later — see the schema
+      // comment on Order.customerIpAddress. This is what the payment
+      // webhook's risk check (assessRisk()) reads before fulfilment.
+      customerIpAddress: getClientIp(req.headers),
+      customerUserAgent: req.headers.get("user-agent") ?? undefined,
       items: {
         create: orderLines.map((line) => ({
           productId: line.productId,

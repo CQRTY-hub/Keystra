@@ -5,6 +5,7 @@ import termsNl from "@/i18n/legal/terms.nl";
 import { getMessages } from "@/i18n";
 import { parseContentLocale, languageAlternates } from "@/i18n/content-locale";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { PageTitleBand } from "@/components/PageTitleBand";
 
 const t = getMessages();
 
@@ -31,16 +32,15 @@ export default async function TermsPage({ searchParams }: TermsPageProps) {
 
   return (
     <article className="max-w-3xl">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">{title}</h1>
+      <PageTitleBand title={title}>
         <LanguageToggle current={locale} basePath="/terms" />
-      </div>
-      <p className="text-sm text-slate-500">
+      </PageTitleBand>
+      <p className="text-body-md mt-4 text-secondary">
         {t.terms.versionLabel}: {TERMS_VERSION}
       </p>
 
       {content.paragraphs.map((paragraph, i) => (
-        <p key={i} className="mt-4 text-slate-700">
+        <p key={i} className="text-body-md mt-4 text-on-surface">
           {paragraph}
         </p>
       ))}

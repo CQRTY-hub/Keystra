@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPriceCents } from "@/lib/currency";
 import { CopyButton } from "@/components/shop/CopyButton";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { getMessages } from "@/i18n";
 
 const t = getMessages();
@@ -35,46 +36,51 @@ export default async function OrderConfirmationPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">{t.confirmation.title}</h1>
+      <PageTitleBand title={t.confirmation.title} />
 
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <span className="text-slate-700">{t.confirmation.orderNumberLabel}:</span>
-        <span className="font-mono text-sm">{order.id}</span>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-body-md text-secondary">{t.confirmation.orderNumberLabel}:</span>
+        <span className="text-body-md font-mono text-on-surface">{order.id}</span>
         <CopyButton value={order.id} />
       </div>
-      <p className="mt-1 text-slate-700">{t.confirmation.statusLabel(order.status)}</p>
+      <p className="text-body-md mt-1 text-secondary">
+        {t.confirmation.statusLabel(order.status)}
+      </p>
 
       {order.status === "held" && (
-        <p className="mt-4 rounded border border-slate-300 bg-slate-50 p-4">
+        <p className="text-body-md mt-4 rounded-keystra border border-outline bg-container p-4 text-on-surface">
           {t.confirmation.heldBody(order.customerEmail)}
         </p>
       )}
 
       {order.status === "awaiting_code" && (
-        <p className="mt-4 rounded border border-slate-300 bg-slate-50 p-4">
+        <p className="text-body-md mt-4 rounded-keystra border border-outline bg-container p-4 text-on-surface">
           {t.confirmation.awaitingCodeBody(order.customerEmail)}
         </p>
       )}
 
       {order.status === "completed" && (
         <div className="mt-6">
-          <p className="text-slate-700">
+          <p className="text-body-md text-secondary">
             {t.confirmation.completedEmailedTo(order.customerEmail)}
           </p>
           <ul className="mt-4 flex flex-col gap-4">
             {order.items.map((item) => (
-              <li key={item.id} className="rounded border border-slate-200 p-4">
-                <p className="font-medium">{item.product.title}</p>
-                <p className="text-sm text-slate-700">
+              <li
+                key={item.id}
+                className="rounded-keystra border border-outline bg-container p-4"
+              >
+                <p className="text-title-sm text-on-surface">{item.product.title}</p>
+                <p className="text-body-md text-secondary">
                   {formatPriceCents(item.unitPriceCents)}
                 </p>
                 {item.deliveredKeys.map((key) =>
                   key.deliveryMethod === "text" ? (
                     <div
                       key={key.id}
-                      className="mt-2 flex flex-wrap items-center gap-2 rounded bg-slate-100 p-2"
+                      className="mt-2 flex flex-wrap items-center gap-2 rounded-keystra border border-outline bg-container-lowest p-2"
                     >
-                      <p className="min-w-0 flex-1 break-all font-mono text-sm">
+                      <p className="min-w-0 flex-1 break-all font-mono text-sm text-on-surface">
                         {key.value}
                       </p>
                       <CopyButton value={key.value} />
@@ -85,7 +91,7 @@ export default async function OrderConfirmationPage({
                       key={key.id}
                       src={`data:image/png;base64,${key.value}`}
                       alt={t.confirmation.keyImageAlt(item.product.title)}
-                      className="mt-2 max-w-xs"
+                      className="mt-2 max-w-xs rounded-keystra border border-outline"
                     />
                   )
                 )}
@@ -98,7 +104,7 @@ export default async function OrderConfirmationPage({
       {(order.status === "pending" ||
         order.status === "paid" ||
         order.status === "fulfilling") && (
-        <p className="mt-4 text-slate-700">{t.confirmation.processing}</p>
+        <p className="text-body-md mt-4 text-secondary">{t.confirmation.processing}</p>
       )}
     </div>
   );

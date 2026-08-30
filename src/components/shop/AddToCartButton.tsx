@@ -15,6 +15,7 @@ export function AddToCartButton({ product }: { product: ProductSummary }) {
     <div>
       <Button
         type="button"
+        variant="primary"
         onClick={() => {
           addItem({
             productId: product.id,
@@ -26,7 +27,7 @@ export function AddToCartButton({ product }: { product: ProductSummary }) {
       >
         {t.product.addToCart}
       </Button>
-      <p role="status" className="mt-2 text-sm text-slate-700">
+      <p role="status" className="text-body-md mt-2 text-secondary">
         {added ? t.product.addedToCart : ""}
       </p>
     </div>

@@ -31,6 +31,8 @@ interface CartContextValue {
   setQuantity: (productId: string, quantity: number) => void;
   clear: () => void;
   totalCents: number;
+  /** Sum of every item's quantity — what the header's cart badge shows. */
+  itemCount: number;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -89,9 +91,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items]
   );
 
+  const itemCount = useMemo(
+    () => items.reduce((sum, i) => sum + i.quantity, 0),
+    [items]
+  );
+
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, setQuantity, clear, totalCents }}
+      value={{ items, addItem, removeItem, setQuantity, clear, totalCents, itemCount }}
     >
       {children}
     </CartContext.Provider>

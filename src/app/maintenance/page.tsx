@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { getMessages } from "@/i18n";
 
 /**
@@ -24,9 +25,12 @@ export const revalidate = 3600;
 export default function MaintenancePage() {
   return (
     <div>
-      <h1 className="text-2xl font-semibold">{t.maintenance.title}</h1>
-      <p className="mt-2 text-slate-700">{t.maintenance.body}</p>
-      <Link href="/order/lookup" className="mt-6 inline-flex items-center underline">
+      <PageTitleBand title={t.maintenance.title} />
+      <p className="text-body-md mt-4 text-secondary">{t.maintenance.body}</p>
+      <Link
+        href="/order/lookup"
+        className="mt-6 inline-flex items-center text-secondary underline hover:text-primary"
+      >
         {t.maintenance.lookupLink}
       </Link>
     </div>

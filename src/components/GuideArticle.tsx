@@ -1,5 +1,6 @@
 import type { ContentLocale } from "@/i18n/content-locale";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { PageTitleBand } from "@/components/PageTitleBand";
 
 interface GuideContent {
   title: string;
@@ -20,19 +21,18 @@ export function GuideArticle({
 }) {
   return (
     <article className="max-w-3xl">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">{guide.title}</h1>
+      <PageTitleBand title={guide.title}>
         <LanguageToggle current={locale} basePath={basePath} />
-      </div>
-      <p className="mt-2 text-slate-700">{guide.intro}</p>
+      </PageTitleBand>
+      <p className="text-body-md mt-4 text-secondary">{guide.intro}</p>
 
-      <ol className="mt-6 list-decimal space-y-2 pl-5 text-slate-700">
+      <ol className="text-body-md mt-6 list-decimal space-y-2 pl-5 text-on-surface">
         {guide.steps.map((step, i) => (
           <li key={i}>{step}</li>
         ))}
       </ol>
 
-      <ul className="mt-6 list-disc space-y-2 pl-5 text-sm text-slate-600">
+      <ul className="text-body-md mt-6 list-disc space-y-2 pl-5 text-secondary">
         {guide.notes.map((note, i) => (
           <li key={i}>{note}</li>
         ))}

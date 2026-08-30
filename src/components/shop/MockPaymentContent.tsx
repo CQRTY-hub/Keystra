@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { getMessages } from "@/i18n";
 import { useCart } from "@/lib/cart-context";
 
@@ -55,10 +56,10 @@ function MockPaymentInner() {
 
   return (
     <div className="max-w-md">
-      <h1 className="text-2xl font-semibold">{t.mockPayment.title}</h1>
-      <p className="mt-2 text-slate-700">{t.mockPayment.body}</p>
+      <PageTitleBand title={t.mockPayment.title} />
+      <p className="text-body-md mt-4 text-secondary">{t.mockPayment.body}</p>
       <div className="mt-6 flex gap-2">
-        <Button type="button" onClick={pay} disabled={status === "paying"}>
+        <Button type="button" variant="primary" onClick={pay} disabled={status === "paying"}>
           {status === "paying" ? t.mockPayment.paying : t.mockPayment.pay}
         </Button>
         <Button
@@ -71,7 +72,7 @@ function MockPaymentInner() {
         </Button>
       </div>
       {status === "error" && (
-        <p role="alert" className="mt-4 text-sm text-red-700">
+        <p role="alert" className="text-body-md mt-4 text-danger">
           {t.mockPayment.error}
         </p>
       )}

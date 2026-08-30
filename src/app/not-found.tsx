@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { getMessages } from "@/i18n";
 
 export default function NotFound() {
@@ -6,11 +7,11 @@ export default function NotFound() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">{t.notFound.title}</h1>
-      <p className="mt-2 text-slate-700">{t.notFound.body}</p>
+      <PageTitleBand title={t.notFound.title} />
+      <p className="text-body-md mt-4 text-secondary">{t.notFound.body}</p>
       <Link
         href="/shop"
-        className="mt-6 inline-flex items-center justify-center rounded bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700"
+        className="text-title-sm mt-6 inline-flex items-center justify-center rounded-keystra border border-secondary px-4 py-2 text-secondary hover:bg-container"
       >
         {t.notFound.backToShop}
       </Link>

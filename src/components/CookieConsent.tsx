@@ -47,15 +47,19 @@ export function CookieConsent() {
     <div
       role="dialog"
       aria-label={t.cookieConsent.dialogLabel}
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-300 bg-white p-4"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-outline bg-container p-gutter"
     >
       <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-900">{t.cookieConsent.body}</p>
+        <p className="text-body-md text-on-surface">{t.cookieConsent.body}</p>
         <div className="flex gap-2">
+          {/* Neither choice is a buy action — both stay "secondary" so
+              rejecting reads as exactly as easy as accepting, not dimmer. */}
           <Button variant="secondary" onClick={() => choose("rejected")}>
             {t.cookieConsent.reject}
           </Button>
-          <Button onClick={() => choose("accepted")}>{t.cookieConsent.accept}</Button>
+          <Button variant="secondary" onClick={() => choose("accepted")}>
+            {t.cookieConsent.accept}
+          </Button>
         </div>
       </div>
     </div>

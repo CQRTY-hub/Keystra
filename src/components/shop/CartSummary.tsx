@@ -10,7 +10,7 @@ export function CartSummary() {
   const t = getMessages();
 
   if (items.length === 0) {
-    return <p className="text-slate-700">{t.cart.empty}</p>;
+    return <p className="text-body-md text-secondary">{t.cart.empty}</p>;
   }
 
   return (
@@ -18,14 +18,14 @@ export function CartSummary() {
       <table className="w-full text-left">
         <caption className="sr-only">{t.cart.tableCaption}</caption>
         <thead>
-          <tr className="border-b border-slate-300">
-            <th scope="col" className="py-2">
+          <tr className="text-title-sm border-b border-outline text-on-surface">
+            <th scope="col" className="py-2 font-medium">
               {t.cart.productHeader}
             </th>
-            <th scope="col" className="py-2">
+            <th scope="col" className="py-2 font-medium">
               {t.cart.quantityHeader}
             </th>
-            <th scope="col" className="py-2">
+            <th scope="col" className="py-2 font-medium">
               {t.cart.priceHeader}
             </th>
             <th scope="col" className="py-2">
@@ -33,9 +33,9 @@ export function CartSummary() {
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="text-body-md text-on-surface">
           {items.map((item) => (
-            <tr key={item.productId} className="border-b border-slate-200">
+            <tr key={item.productId} className="border-b border-outline">
               <td className="py-2">{item.title}</td>
               <td className="py-2">
                 <label className="sr-only" htmlFor={`qty-${item.productId}`}>
@@ -49,7 +49,7 @@ export function CartSummary() {
                   onChange={(e) =>
                     setQuantity(item.productId, Number(e.target.value))
                   }
-                  className="w-16 rounded border border-slate-300 px-2 py-1"
+                  className="w-16 rounded-keystra border border-outline bg-container-lowest px-2 py-1 text-on-surface"
                 />
               </td>
               <td className="py-2">
@@ -68,7 +68,9 @@ export function CartSummary() {
           ))}
         </tbody>
       </table>
-      <p className="mt-4 text-lg font-medium">{t.cart.total(formatPriceCents(totalCents))}</p>
+      <p className="text-headline-md mt-4 text-on-surface">
+        {t.cart.total(formatPriceCents(totalCents))}
+      </p>
     </div>
   );
 }

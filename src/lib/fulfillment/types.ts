@@ -25,9 +25,26 @@ export interface AvailabilityResult {
 export interface RiskAssessmentInput {
   orderId: string;
   customerEmail: string;
-  amountCents: number;
-  ipAddress?: string;
-  billingCountry?: string;
+  /**
+   * Required by CodesWholesale's actual v3/security request body
+   * (customerEmail + customerIpAddress are the two mandatory fields —
+   * confirmed by CodesWholesale directly, 2026-08-26, after four earlier
+   * guesses at the shape all failed). Captured at checkout time and
+   * stored on Order (see prisma/schema.prisma) — this call happens later,
+   * from the payment webhook, which has no request of its own to read an
+   * IP from.
+   */
+  customerIpAddress: string;
+  customerUserAgent?: string;
+  /**
+   * The email Mollie actually charged, as opposed to customerEmail (what
+   * the shopper typed at checkout). A mismatch between the two is
+   * exactly the fraud signal this endpoint exists for (storefront
+   * owner's own framing, 2026-08-26) — not available yet, since Mollie
+   * itself is still a stub with no real payer identity to report. Send
+   * it once Phase 3.6 connects a real Mollie account.
+   */
+  customerPaymentEmail?: string;
 }
 
 export interface RiskAssessmentResult {

@@ -30,7 +30,7 @@ export function CopyButton({ value }: { value: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex h-11 shrink-0 items-center justify-center rounded border border-slate-300 px-4 text-sm font-medium hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+      className="text-title-sm inline-flex h-11 shrink-0 items-center justify-center rounded-keystra border border-secondary px-4 text-secondary hover:bg-container focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       {copied ? t.copyButton.copied : t.copyButton.copy}
       <span className="sr-only">{t.copyButton.srSuffix}</span>

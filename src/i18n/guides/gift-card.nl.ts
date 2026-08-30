@@ -1,8 +1,12 @@
-/** Dutch sibling of gift-card.en.ts — see terms.nl.ts for why this exists. */
+import { LEGAL_REVIEW_NOTICE_NL } from "@/i18n/legal/legal-review-notice.nl";
+
+/**
+ * Dutch sibling of gift-card.en.ts — see terms.nl.ts for why this
+ * exists, and steam.nl.ts for why the review notice is prepended here.
+ */
 const giftCardGuideNl = {
   title: "Een gift card inwisselen",
-  intro:
-    "Gift cards wissel je in op het platform waarvoor ze uitgegeven zijn — de precieze stappen verschillen per platform, maar het patroon is overal hetzelfde.",
+  intro: `${LEGAL_REVIEW_NOTICE_NL} Gift cards wissel je in op het platform waarvoor ze uitgegeven zijn — de precieze stappen verschillen per platform, maar het patroon is overal hetzelfde.`,
   steps: [
     "Log in op het account dat je wil opwaarderen.",
     'Zoek op dat platform de pagina "code inwisselen" of "gift card inwisselen" — meestal onder account- of walletinstellingen.',

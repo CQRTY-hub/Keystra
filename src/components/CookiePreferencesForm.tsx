@@ -42,13 +42,15 @@ export function CookiePreferencesForm({
         : t.cookiePreferencesPage.statusNotSet;
 
   return (
-    <div>
+    <div className="text-body-md text-on-surface">
       <p>
-        <span className="font-medium">{t.cookiePreferencesPage.currentStatusLabel}:</span>{" "}
+        <span className="text-title-sm">{t.cookiePreferencesPage.currentStatusLabel}:</span>{" "}
         {statusText}
       </p>
 
       <div className="mt-4 flex gap-2">
+        {/* Neither choice is a buy action — both "secondary", same as the
+            banner, so rejecting reads as exactly as easy as accepting. */}
         <Button
           variant="secondary"
           onClick={() => choose("rejected")}
@@ -56,12 +58,16 @@ export function CookiePreferencesForm({
         >
           {t.cookiePreferencesPage.rejectButton}
         </Button>
-        <Button onClick={() => choose("accepted")} disabled={saving !== null}>
+        <Button
+          variant="secondary"
+          onClick={() => choose("accepted")}
+          disabled={saving !== null}
+        >
           {t.cookiePreferencesPage.acceptButton}
         </Button>
       </div>
 
-      <p role="status" className="mt-2 text-sm text-slate-700">
+      <p role="status" className="text-body-md mt-2 text-secondary">
         {justSaved ? t.cookiePreferencesPage.saved : ""}
       </p>
     </div>

@@ -93,16 +93,19 @@ export function CheckoutForm() {
     if (error) {
       return (
         <div>
-          <p role="alert" className="text-sm text-red-700">
+          <p role="alert" className="text-body-md text-danger">
             {error}
           </p>
-          <Link href="/shop" className="mt-4 inline-flex items-center underline">
+          <Link
+            href="/shop"
+            className="mt-4 inline-flex items-center text-secondary underline hover:text-primary"
+          >
             {t.notFound.backToShop}
           </Link>
         </div>
       );
     }
-    return <p className="text-slate-700">{t.checkout.emptyCart}</p>;
+    return <p className="text-body-md text-secondary">{t.checkout.emptyCart}</p>;
   }
 
   return (
@@ -130,12 +133,17 @@ export function CheckoutForm() {
             type="checkbox"
             checked={termsAccepted}
             onChange={(e) => setTermsAccepted(e.target.checked)}
-            className="h-5 w-5"
+            className="h-5 w-5 accent-secondary"
           />
         </span>
-        <span className="py-3 text-sm text-slate-900">
+        <span className="text-body-md py-3 text-on-surface">
           {t.checkout.termsPrefix}
-          <a href="/terms" className="underline" target="_blank" rel="noreferrer">
+          <a
+            href="/terms"
+            className="text-secondary underline hover:text-primary"
+            target="_blank"
+            rel="noreferrer"
+          >
             {t.checkout.termsLink}
           </a>
           {t.checkout.termsSuffix}
@@ -152,14 +160,14 @@ export function CheckoutForm() {
             type="checkbox"
             checked={waiverAccepted}
             onChange={(e) => setWaiverAccepted(e.target.checked)}
-            className="h-5 w-5"
+            className="h-5 w-5 accent-secondary"
           />
         </span>
-        <span className="py-3 text-sm text-slate-900">
+        <span className="text-body-md py-3 text-on-surface">
           {WITHDRAWAL_WAIVER_TEXT}{" "}
           <a
             href="/withdrawal-waiver?lang=nl"
-            className="underline"
+            className="text-secondary underline hover:text-primary"
             target="_blank"
             rel="noreferrer"
           >
@@ -168,15 +176,41 @@ export function CheckoutForm() {
         </span>
       </label>
 
-      <p className="text-lg font-medium">{t.checkout.total(formatPriceCents(totalCents))}</p>
+      {/* Informatieverplichtingen-toetsing.md, finding 2.2: the
+          guideline requires the main product characteristics and total
+          price to be shown immediately before the order button, without
+          the shopper having to leave this page — before this, that list
+          only existed on the separate /cart page the shopper had
+          already moved past. */}
+      <div>
+        <h2 className="text-title-sm text-on-surface">{t.checkout.orderSummaryTitle}</h2>
+        <ul className="mt-2 flex flex-col gap-1">
+          {items.map((item) => (
+            <li
+              key={item.productId}
+              className="text-body-md flex justify-between gap-4 text-on-surface"
+            >
+              <span>
+                {item.title}
+                {item.quantity > 1 ? ` × ${item.quantity}` : ""}
+              </span>
+              <span>{formatPriceCents(item.priceCents * item.quantity)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="text-headline-md text-on-surface">
+        {t.checkout.total(formatPriceCents(totalCents))}
+      </p>
 
       {error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-body-md text-danger">
           {error}
         </p>
       )}
 
-      <Button type="submit" disabled={!canSubmit || submitting}>
+      <Button type="submit" variant="primary" disabled={!canSubmit || submitting}>
         {submitting ? t.checkout.submitting : t.checkout.submit}
       </Button>
     </form>

@@ -46,6 +46,13 @@ const en = {
     refundPolicy: "Refund policy",
     withdrawalWaiver: "Withdrawal waiver",
     maintenance: "Maintenance",
+    adminLogin: "Admin login",
+    adminVerify: "Verify",
+    admin: "Admin",
+    adminOrders: "Orders",
+    adminProducts: "Products",
+    adminKillSwitch: "Kill switch",
+    adminPricing: "Pricing rule",
   },
 
   languageToggle: {
@@ -58,6 +65,7 @@ const en = {
     mainNavigation: "Main navigation",
     shop: "Shop",
     cart: "Cart",
+    cartWithCount: (count: number) => `Cart, ${count} item${count === 1 ? "" : "s"}`,
     orderLookup: "Track order",
   },
 
@@ -83,6 +91,24 @@ const en = {
     intro: "Delivered instantly after payment.",
     browseFullRange: "Browse the full range",
     featured: "Featured",
+    // Hero headline is two separately-styled runs, not one string — the
+    // second one is DESIGN.md's "one accent word/line" in cyan. The
+    // Stitch reference's own slogan, restored at the storefront owner's
+    // request (2026-08-24) — it reads as excited relative to PRODUCT.md's
+    // documented calm/direct voice, flagged once; kept as the owner's
+    // deliberate call, not a default.
+    heroLine: "Unlock your next",
+    heroAccent: "adventure",
+    heroSubtext:
+      "Bought from one distributor and sold directly by Keystra — never a marketplace listing from someone else.",
+    redeemsOn: "Redeems on",
+    trendingNow: "Trending now",
+    viewAll: "View all",
+    // Placeholder-only — see DESIGN.md "Activity module". Not a claim of
+    // real, live sales data; must become real order activity (or be
+    // removed) before a real launch.
+    recentActivityTitle: "Recent activity",
+    recentActivityPurchased: (product: string) => `Purchased ${product}`,
   },
 
   shop: {
@@ -102,6 +128,7 @@ const en = {
   product: {
     addToCart: "Add to cart",
     addedToCart: "Added to cart.",
+    inStock: "In stock",
     redemptionTitle: "Redemption instructions",
     redemptionBody:
       "You'll get your key on this page and by email right after payment.",
@@ -109,6 +136,7 @@ const en = {
     regionTitle: "Region and delivery",
     regionBody: (region: string) =>
       `This item is region-locked to ${region}. Delivery is electronic, right after payment is confirmed.`,
+    withdrawalLinkLabel: "Right of withdrawal & refunds",
   },
 
   cart: {
@@ -127,6 +155,7 @@ const en = {
 
   checkout: {
     title: "Checkout",
+    orderSummaryTitle: "What you're ordering",
     email: "Email address",
     termsPrefix: "I agree to the ",
     termsLink: "terms and conditions",
@@ -238,6 +267,16 @@ const en = {
 
   contact: {
     title: "Contact",
+    entityLabel: "Trade name",
+    traderLabel: "Legal name",
+    emailLabel: "Email",
+    responseTimeLabel: "Response time",
+    responseTimeValue: (days: number) =>
+      `We aim to reply within ${days} business days. [TE BEVESTIGEN DOOR JURIST: is a stated response time an acceptable stand-in for a phone number under Belgian consumer-information law for a one-person business with no call desk?]`,
+    companyNumberLabel: "Company registration number",
+    vatNumberLabel: "VAT number",
+    addressLabel: "Address",
+    toFollow: "To follow.",
   },
 
   terms: {
@@ -279,6 +318,150 @@ const en = {
     title: "Down for maintenance",
     body: "We're offline briefly for a security or technical issue. Already-placed orders and keys remain available.",
     lookupLink: "Track an order",
+  },
+
+  // Phase 3.5 admin panel. Same catalog as the rest of the site — this
+  // isn't customer-facing, but "no component reads a hardcoded string"
+  // never had a backstage exception.
+  admin: {
+    wordmark: "Keystra Admin",
+    login: {
+      title: "Admin login",
+      intro: "Single admin account. Two-factor required.",
+      email: "Email address",
+      password: "Password",
+      submit: "Continue",
+      submitting: "Checking…",
+    },
+    verify: {
+      title: "Enter your code",
+      intro: "6-digit code from your authenticator app.",
+      code: "Code",
+      submit: "Verify",
+      submitting: "Verifying…",
+    },
+    dashboard: {
+      title: "Admin",
+      loggedInAs: (email: string) => `Logged in as ${email}.`,
+      logout: "Log out",
+      nav: {
+        orders: "Orders",
+        products: "Products",
+        killSwitch: "Kill switch",
+        pricing: "Pricing",
+      },
+      balance: {
+        title: "Supplier balance",
+        mockProvider: "Not applicable — the mock fulfilment provider is active, not CodesWholesale.",
+        error: "Could not reach the supplier to check the balance.",
+        low: (amount: string) => `Low: ${amount} left.`,
+        ok: (amount: string) => `${amount} available.`,
+        noThreshold: "No low-balance threshold set yet — see the kill switch page.",
+      },
+    },
+    orders: {
+      title: "Orders",
+      filterLabel: "Status",
+      filterAll: "All statuses",
+      filterFrom: "From",
+      filterTo: "To",
+      applyFilters: "Filter",
+      columnId: "Order",
+      columnEmail: "Email",
+      columnTotal: "Total",
+      columnStatus: "Status",
+      columnDate: "Placed",
+      noResults: "No orders match this filter.",
+      view: "View",
+      detailTitle: (id: string) => `Order ${id}`,
+      backToList: "Back to orders",
+      itemsTitle: "Items",
+      riskTitle: "Risk check",
+      riskScore: "Risk score",
+      riskThreshold: (threshold: number) => `threshold ${threshold}`,
+      riskCheckFailed: "Risk check failed",
+      holdReason: "Hold reason",
+      holdReasonText: (reason: string) =>
+        reason === "high_risk_score"
+          ? "High risk score"
+          : reason === "risk_check_failed"
+            ? "Risk check failed (fail closed)"
+            : reason === "fulfilment_failed"
+              ? "Fulfilment failed"
+              : reason,
+      eventLogTitle: "Event log",
+      noEvents: "No events recorded for this order yet.",
+      resolveTitle: "This order is held — resolve it",
+      resolveNote: "Note (optional)",
+      retry: "Retry fulfilment",
+      refund: "Refund and close",
+      resolveHint:
+        "Retry sends it back through fulfilment (for a transient problem, e.g. a supplier timeout). Refund closes the order without delivering a key. Neither issues a real refund yet — Mollie isn't wired up for that (Phase 3.6/3.8); this only records the decision and moves the order's status.",
+    },
+    products: {
+      title: "Products",
+      columnTitle: "Product",
+      columnCategory: "Category",
+      columnRegion: "Region",
+      columnCost: "Cost",
+      columnPrice: "Price",
+      columnMargin: "Margin",
+      columnActive: "Active",
+      costUnknown: "Unknown",
+      refreshCost: "Refresh cost",
+      activate: "Activate",
+      deactivate: "Pause",
+      noProducts: "No products yet.",
+      costAsOf: (date: string) => `as of ${date}`,
+    },
+    killSwitch: {
+      title: "Kill switch",
+      intro:
+        "Three levels, per PLAN.md — none of them require a deploy, in-flight orders are never abandoned, and order lookup keeps working at every level.",
+      level1Title: "Level 1 — Pause one product",
+      level1Body: "Use the active toggle on the Products page for the specific title that's broken. Everything else keeps selling.",
+      level1Link: "Go to products",
+      level2Title: "Level 2 — Pause checkout",
+      level2Body:
+        "The shop stays browsable and product pages still load, but no new orders can be placed. This is the one you'll use most.",
+      level2CurrentlyOpen: "Checkout is open.",
+      level2CurrentlyPaused: (by: string, at: string) => `Paused by ${by} at ${at}.`,
+      level2Pause: "Pause checkout",
+      level2Resume: "Resume checkout",
+      level3Title: "Level 3 — Full maintenance",
+      level3Body:
+        "The whole site goes behind a notice. Reserve this for a security problem — a dark site costs trust a paused checkout doesn't. Order lookup and key retrieval keep working even at this level.",
+      level3CurrentlyOff: "Maintenance mode is off.",
+      level3CurrentlyOn: (by: string, at: string) => `Enabled by ${by} at ${at}.`,
+      level3Enable: "Enable maintenance mode",
+      level3Disable: "Disable maintenance mode",
+      reasonLabel: "Reason (recorded in the event log)",
+      balanceThresholdTitle: "Low-balance warning threshold",
+      balanceThresholdLabel: "Warn when supplier balance drops below (€)",
+      balanceThresholdSave: "Save threshold",
+    },
+    pricing: {
+      title: "Pricing rule",
+      notAppliedWarning:
+        "Not applied yet. Saving these values only stores them — nothing repricing anything reads them until the repricing run itself is built. No product's price changes because of this screen.",
+      marginMultiplierLabel: "Margin multiplier (e.g. 1.35 = cost + 35%)",
+      minAbsoluteMarginLabel: "Minimum absolute margin (€)",
+      priceFloorLabel: "Price floor (€)",
+      roundingStyleLabel: "Rounding style (e.g. end_99)",
+      save: "Save",
+      savedAt: (date: string) => `Last saved ${date}.`,
+      neverSaved: "Never saved.",
+    },
+    errors: {
+      invalidCredentials: "Invalid email or password.",
+      invalidCode: "Invalid code.",
+      challengeExpired: "Your session expired. Log in again.",
+      accountLocked: (minutes: number) =>
+        `Too many failed attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
+      accountLockedNoTime: "Too many failed attempts. Try again later.",
+      ipThrottled: "Too many attempts from this connection. Try again later.",
+      unexpected: "Something went wrong. Please try again.",
+    },
   },
 } as const;
 

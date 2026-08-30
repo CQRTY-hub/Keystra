@@ -24,12 +24,23 @@ export type EventType =
   | "order.status_changed"
   | "order.held"
   | "order.awaiting_code"
+  | "order.risk_assessed"
+  | "order.risk_check_failed"
   | "consent.terms_accepted"
   | "consent.withdrawal_waiver_accepted"
   | "consent.cookie_consent_set"
   | "email.send_attempted"
   | "email.send_failed"
-  | "admin.kill_switch_changed";
+  | "admin.kill_switch_changed"
+  | "admin.login_succeeded"
+  | "admin.login_failed"
+  | "admin.account_locked"
+  | "admin.logout"
+  | "admin.product_active_changed"
+  | "admin.product_cost_refreshed"
+  | "admin.maintenance_mode_changed"
+  | "admin.pricing_rule_updated"
+  | "admin.circuit_breaker_triggered";
 
 interface LogEventInput {
   orderId?: string;

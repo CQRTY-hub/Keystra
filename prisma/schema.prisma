@@ -26,12 +26,34 @@ datasource db {
 // One row. Read/written through src/lib/kill-switch.ts. This is the flag
 // from PLAN.md Phase 1 point 8 — a database flag, not an env var, so
 // stopping sales never requires a deploy.
+//
+// PLAN.md Phase 3.5, "The noodknop": three levels. Level 1 (pause one
+// product) is Product.active, below. Level 2 (pause checkout) is
+// checkoutEnabled here, unchanged since Phase 1. Level 3 (full
+// maintenance) is maintenanceMode, added here — same
+// enabled/at/by/reason shape as checkout pausing, deliberately, so both
+// levels are handled identically everywhere they're read or written.
 model ShopSettings {
   id               Int      @id @default(1)
   checkoutEnabled  Boolean  @default(true)
   checkoutPausedAt DateTime?
   checkoutPausedBy String?
   checkoutPauseReason String?
+
+  maintenanceMode        Boolean   @default(false)
+  maintenanceModeEnabledAt DateTime?
+  maintenanceModeEnabledBy String?
+  maintenanceModeReason    String?
+
+  // PLAN.md Phase 3.5, "Also on the dashboard": low supplier balance
+  // warning, and the input to the low-balance circuit breaker (see
+  // src/lib/admin/circuit-breakers.ts). Storefront owner, 2026-08-27:
+  // "saldodrempel is min. 50 euro" — defaulted here rather than left
+  // null, so the breaker is armed the moment the shop goes live, not
+  // only once an admin happens to visit the kill-switch page and set
+  // it by hand. Still editable from there at any time.
+  lowBalanceThresholdCents Int? @default(5000)
+
   updatedAt        DateTime @updatedAt
 }
 
@@ -55,7 +77,25 @@ model Product {
   region         String
   // Stored in the smallest currency unit (cents) to avoid float rounding.
   priceCents     Int
+  // PLAN.md Phase 3.5's "noodknop" Level 1: pausing one product IS
+  // setting this false. No separate paused/reason fields — EventLog
+  // (admin.product_active_changed) already carries who/when/why for
+  // every flip; duplicating that here would just be a second place for
+  // the two to drift apart.
   active         Boolean  @default(true)
+
+  // Supplier cost — a SNAPSHOT, not live. PLAN.md is explicit that
+  // checkAvailability() (what this comes from) is only ever called at
+  // checkout time or on an admin's explicit request, never on a page
+  // view — see src/lib/fulfillment/codeswholesale-provider.ts's own
+  // rate-limit comments. Null until an admin has clicked "refresh cost"
+  // at least once for this product (src/app/admin/products). Feeds the
+  // products list's margin column and, eventually, the Phase 3.5
+  // pricing rule — not applied by anything yet (PLAN.md: "not yet: the
+  // pricing rule itself").
+  costCentsSnapshot Int?
+  costSnapshotAt    DateTime?
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -81,6 +121,16 @@ model Order {
   customerEmail   String
   totalCents      Int
   molliePaymentId String?     @unique
+
+  // Captured once, at checkout (src/app/api/checkout/route.ts) — the
+  // payment webhook that later calls assessRisk() has no request of its
+  // own to read an IP from, and CodesWholesale's /v3/security requires
+  // customerIpAddress. An evidentiary fact about how the order was
+  // placed, so this is never updated after creation. (Also doubles as a
+  // head start on PLAN.md Phase 3.5's VAT location-evidence requirement
+  // — "IP-derived country" — though that usage isn't wired up yet.)
+  customerIpAddress String?
+  customerUserAgent String?
 
   // Withdrawal-right waiver (PLAN.md Phase 1 point 6 / Appendix item 1).
   // A dedicated checkbox, separate from the terms checkbox, unticked by
@@ -161,4 +211,85 @@ model EventLog {
 
   @@index([orderId])
   @@index([eventType])
+  // Added for Phase 3.5 admin-login rate limiting (src/lib/admin/rate-limit.ts),
+  // which counts recent admin.login_* events per IP/email within a short
+  // window — without this, that query has to scan the whole table.
+  @@index([createdAt])
+}
+
+// Phase 3.5, "Access": a single admin login, my email only — deliberately
+// not a Users table. No public registration route exists anywhere in the
+// app; this row is created and rotated only by scripts/admin-setup.ts,
+// run locally by the owner, never through a web route.
+model AdminCredential {
+  id             Int       @id @default(1) // singleton, same pattern as ShopSettings
+  email          String    @unique
+  // scrypt (Node's built-in crypto, no new dependency) — see
+  // src/lib/admin/password.ts. Never a plaintext password, ever.
+  passwordHash   String
+  // Base32, RFC 6238 — see src/lib/admin/totp.ts. Phase 3.8 is where
+  // secrets-at-rest encryption gets built (same gap KEY_ENCRYPTION_SECRET
+  // in .env.example already documents for DeliveredKey.value); this is
+  // plaintext-in-the-database until then, consistent with everything
+  // else pre-3.8.
+  totpSecret     String
+  // Account-level lockout — PLAN.md doesn't specify exact numbers; see
+  // src/lib/admin/rate-limit.ts for the thresholds actually used.
+  failedAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// Step 1 (password) passing doesn't log you in — it issues one of these,
+// which step 2 (TOTP) must then consume before a real AdminSession is
+// created. Single-use (consumedAt) and short-lived (expiresAt) so it
+// can't be replayed, and so someone can't reach the TOTP-verification
+// step without having passed the password step first.
+model AdminLoginChallenge {
+  id         String    @id @default(uuid())
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  consumedAt DateTime?
+}
+
+// A logged-in admin session. DB-backed rather than a signed cookie alone
+// so a session can be revoked outright (delete the row) and so it works
+// identically from any device/process — PLAN.md: "It has to be reachable
+// from my phone."
+model AdminSession {
+  id         String   @id @default(uuid()) // the session token itself
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  lastSeenAt DateTime @default(now())
+}
+
+// PLAN.md Phase 3.5, "Pricing — a rule, not 500 numbers". Storage only,
+// deliberately — the storefront owner hasn't finalized the margin
+// decision yet and is waiting on their accountant re: VAT position.
+// Nothing in the codebase reads this to actually reprice a product; the
+// admin screen that writes it says so explicitly. A separate singleton
+// from ShopSettings on purpose — this is a distinct concern ("what a
+// price should be"), not shop-operational state ("is the shop open").
+model PricingRule {
+  id Int @id @default(1)
+
+  // Supplier cost (top price band — see PLAN.md, single-unit fulfilment
+  // buys at the most expensive band) multiplied by this to get a
+  // candidate sale price. E.g. 1.35 = cost + 35%.
+  marginMultiplier Float?
+  // Floor on the ABSOLUTE markup in cents, regardless of what the
+  // multiplier alone would produce — protects thin-margin cheap items
+  // (top-ups, low-value gift cards) where a percentage alone rounds to
+  // almost nothing.
+  minAbsoluteMarginCents Int?
+  // Absolute minimum sale price in cents, full stop, whatever the above
+  // two produce.
+  priceFloorCents Int?
+  // Free text for now (e.g. "end_99") — not an enum, since the actual
+  // rounding behaviour isn't implemented yet either; enforcing a closed
+  // set of values for a rule nothing reads would be premature.
+  roundingStyle String?
+
+  updatedAt DateTime @updatedAt
 }

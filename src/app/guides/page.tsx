@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { getMessages } from "@/i18n";
 
 const t = getMessages();
@@ -16,12 +17,15 @@ const GUIDES = [
 export default function GuidesIndexPage() {
   return (
     <div>
-      <h1 className="text-2xl font-semibold">{t.guidesIndex.title}</h1>
-      <p className="mt-2 text-slate-700">{t.guidesIndex.intro}</p>
+      <PageTitleBand title={t.guidesIndex.title} />
+      <p className="text-body-md mt-4 text-secondary">{t.guidesIndex.intro}</p>
       <ul className="mt-6 flex flex-col gap-2">
         {GUIDES.map((guide) => (
           <li key={guide.href}>
-            <Link href={guide.href} className="underline">
+            <Link
+              href={guide.href}
+              className="text-title-sm text-secondary underline hover:text-primary"
+            >
               {t.category[guide.category]}
             </Link>
           </li>

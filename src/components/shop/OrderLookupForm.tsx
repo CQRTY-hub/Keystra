@@ -48,7 +48,7 @@ export function OrderLookupForm() {
           onChange={(e) => setOrderId(e.target.value)}
           aria-describedby="order-id-hint"
         />
-        <p id="order-id-hint" className="mt-1 text-sm text-slate-500">
+        <p id="order-id-hint" className="text-body-md mt-1 text-secondary">
           {t.orderLookup.orderIdHint}
         </p>
       </div>
@@ -62,7 +62,7 @@ export function OrderLookupForm() {
         autoComplete="email"
       />
       {notFound && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-body-md text-danger">
           {t.orderLookup.notFound}
         </p>
       )}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCookieConsent } from "@/lib/consent";
 import { CookiePreferencesForm } from "@/components/CookiePreferencesForm";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { getMessages } from "@/i18n";
 
 const t = getMessages();
@@ -13,8 +14,8 @@ export default async function CookiePreferencesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">{t.cookiePreferencesPage.title}</h1>
-      <p className="mt-2 text-slate-700">{t.cookiePreferencesPage.intro}</p>
+      <PageTitleBand title={t.cookiePreferencesPage.title} />
+      <p className="text-body-md mt-4 text-secondary">{t.cookiePreferencesPage.intro}</p>
       <div className="mt-6">
         <CookiePreferencesForm initialStatus={status} />
       </div>

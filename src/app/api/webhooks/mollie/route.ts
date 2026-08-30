@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { logEvent } from "@/lib/event-log";
 import { assertTransition } from "@/lib/order-state-machine";
 import { decideWebhookAction } from "@/lib/webhooks";
+import { decideRiskHold, type RiskCheckOutcome } from "@/lib/risk-decision";
+import {
+  checkFulfilmentCircuitBreakers,
+  checkLowBalanceCircuitBreaker,
+} from "@/lib/admin/circuit-breakers";
 import { verifyWebhook } from "@/lib/payments/mollie-stub";
 import { getFulfillmentProvider } from "@/lib/fulfillment";
 import { getEmailProvider } from "@/lib/email";
@@ -73,13 +78,73 @@ export async function POST(req: NextRequest) {
     payload: { molliePaymentId },
   });
 
+  const fulfillment = getFulfillmentProvider();
+
+  // Risk check happens here — after payment, before any supplier call —
+  // per the storefront owner's explicit instruction (2026-08-26): the
+  // score decides whether this order goes to `held` instead of
+  // fulfilling. The hold/proceed decision itself is decideRiskHold() —
+  // src/lib/risk-decision.ts — a pure function with its own test
+  // coverage for the fail-closed case, same reasoning as
+  // decideWebhookAction above. A held order can always be resolved by
+  // hand later (src/app/admin/orders); a fraudulent order that shipped a
+  // key because a fraud check happened to time out cannot be undone.
+  let riskOutcome: RiskCheckOutcome;
+  try {
+    const risk = await fulfillment.assessRisk({
+      orderId: paidOrder.id,
+      customerEmail: paidOrder.customerEmail,
+      customerIpAddress: paidOrder.customerIpAddress ?? "unknown",
+      customerUserAgent: paidOrder.customerUserAgent ?? undefined,
+      // customerPaymentEmail: not sent yet — Mollie is still a stub with
+      // no real payer identity to report. See RiskAssessmentInput's own
+      // comment in src/lib/fulfillment/types.ts.
+    });
+    riskOutcome = {
+      ok: true,
+      riskScore: risk.riskScore,
+      suggestedHoldThreshold: risk.suggestedHoldThreshold,
+    };
+    await logEvent({
+      orderId: paidOrder.id,
+      eventType: "order.risk_assessed",
+      payload: {
+        riskScore: risk.riskScore,
+        suggestedHoldThreshold: risk.suggestedHoldThreshold,
+        held: risk.riskScore >= risk.suggestedHoldThreshold,
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    riskOutcome = { ok: false, error: message };
+    await logEvent({
+      orderId: paidOrder.id,
+      eventType: "order.risk_check_failed",
+      payload: { message },
+    });
+  }
+
+  const riskDecision = decideRiskHold(riskOutcome);
+
+  if (riskDecision.held) {
+    assertTransition(OrderStatus.paid, OrderStatus.held);
+    await prisma.order.update({
+      where: { id: paidOrder.id },
+      data: { status: OrderStatus.held },
+    });
+    await logEvent({
+      orderId: paidOrder.id,
+      eventType: "order.held",
+      payload: { reason: riskDecision.reason },
+    });
+    return NextResponse.json({ status: "held" });
+  }
+
   assertTransition(OrderStatus.paid, OrderStatus.fulfilling);
   await prisma.order.update({
     where: { id: paidOrder.id },
     data: { status: OrderStatus.fulfilling },
   });
-
-  const fulfillment = getFulfillmentProvider();
 
   let anyFailed = false;
   let anyAwaitingCode = false;
@@ -101,11 +166,22 @@ export async function POST(req: NextRequest) {
         // codeId is an identifier, not a key value — safe to log in the
         // clear, unlike the code it eventually resolves to.
         ...(result.status === "awaiting_code" ? { codeId: result.codeId } : {}),
+        // reason/message: needed by the circuit breakers below to tell a
+        // network-level failure ("timeout"/"unknown") apart from a real
+        // business answer ("out_of_stock"/"empty_balance") — see
+        // src/lib/admin/circuit-breakers.ts's lastCallsAllUnreachable().
+        ...(result.status === "failed" ? { reason: result.reason, message: result.message } : {}),
       },
     });
 
     if (result.status === "failed") {
       anyFailed = true;
+      // Fire-and-check immediately, not batched until after the loop —
+      // PLAN.md's "3 in 5 minutes" is about how fast a bad patch of
+      // orders accumulates; waiting until every item in THIS order has
+      // been tried first would blunt that for any order with more than
+      // one line item.
+      await checkFulfilmentCircuitBreakers();
       continue;
     }
 
@@ -142,6 +218,11 @@ export async function POST(req: NextRequest) {
       });
     }
   }
+
+  // Balance breaker: once per order's fulfilment pass, regardless of
+  // outcome — see checkLowBalanceCircuitBreaker's own comment for why
+  // this isn't folded into the per-item failure check above.
+  await checkLowBalanceCircuitBreaker();
 
   if (anyFailed) {
     // Never invent, retry blindly, or substitute a key (non-negotiable

@@ -3,6 +3,7 @@ import { WITHDRAWAL_WAIVER_VERSION, WITHDRAWAL_WAIVER_TEXT } from "@/lib/consent
 import withdrawalWaiverNl from "@/i18n/legal/withdrawal-waiver.nl";
 import { parseContentLocale, languageAlternates } from "@/i18n/content-locale";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { getMessages } from "@/i18n";
 
 const t = getMessages();
@@ -41,14 +42,16 @@ export default async function WithdrawalWaiverPage({
 
   return (
     <article className="max-w-3xl">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">{title}</h1>
+      <PageTitleBand title={title}>
         <LanguageToggle current={locale} basePath="/withdrawal-waiver" />
-      </div>
-      <p className="text-sm text-slate-500">
+      </PageTitleBand>
+      <p className="text-body-md mt-4 text-secondary">
         {t.terms.versionLabel}: {WITHDRAWAL_WAIVER_VERSION}
       </p>
-      <p className="mt-4 text-slate-700">{text}</p>
+      {locale === "nl" && (
+        <p className="text-body-md mt-4 text-secondary">{withdrawalWaiverNl.reviewNotice}</p>
+      )}
+      <p className="text-body-md mt-4 text-on-surface">{text}</p>
     </article>
   );
 }

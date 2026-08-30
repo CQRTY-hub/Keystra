@@ -1,1 +1,92 @@
 @import "tailwindcss";
+
+/*
+ * Design tokens — transcribed 1:1 from Design/keystra_terminal_design_system_design.md
+ * (the Google Stitch export the owner chose, plus the two additions and the
+ * one gap-fill documented at the top of that file — on-surface text). No
+ * color, radius, or type size below exists anywhere else; components must
+ * reference these, never a literal hex value or arbitrary pixel size.
+ *
+ * Tailwind v4's @theme block does two things at once: it emits each of
+ * these as a real CSS custom property on :root (usable as var(--color-x)
+ * in plain CSS) AND generates matching utility classes (bg-primary,
+ * text-on-surface, rounded-keystra, ...). That's what makes "no loose hex
+ * in components" possible without a duplicate JS config.
+ */
+@theme {
+  /* Surface & background */
+  --color-surface: #121317;
+  --color-surface-dim: #121317;
+  --color-surface-bright: #38393e;
+  --color-container-lowest: #0d0e12;
+  --color-container-low: #1a1b20;
+  --color-container: #212226;
+  --color-container-high: #2b2c31;
+  --color-container-highest: #36373c;
+
+  /* Brand & accents */
+  --color-primary: #66fcf1; /* Electric Cyan — buy actions + the one in-stock status dot ONLY, see DESIGN.md */
+  --color-on-primary: #0b0c10;
+  --color-secondary: #45a29e; /* Muted Teal — labels, borders, links, everything cyan is NOT allowed on */
+  --color-outline: #1f2833;
+  --color-outline-variant: #0b0c10;
+
+  /* Text — see DESIGN.md "Text on dark surfaces" */
+  --color-on-surface: #e6e7ea;
+
+  /* Semantic — see DESIGN.md "Semantic — Error". Not Primary or Secondary:
+     a separate, deliberately muted red reserved for error states. */
+  --color-danger: #b3564c;
+
+  /* Radii — DESIGN.md: "ROUND_FOUR (4px radius for all components)" */
+  --radius-keystra: 4px;
+
+  /* Spacing — DESIGN.md: Margin Container 24px, Gutter 16px. Named so
+     intent stays traceable to the doc; Tailwind's numeric scale (which
+     already lands on the same values at p-6/gap-4) still covers anything
+     the doc doesn't name. */
+  --spacing-gutter: 16px;
+  --spacing-container: 24px;
+
+  /* Typography */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * Named text styles from DESIGN.md's "Typography (Inter)" scale, kept as
+ * single classes matching the doc's own names 1:1 (Headline MD, Title SM,
+ * Body MD, Label Caps) so there's one place each size/weight/case pairing
+ * lives, instead of re-declaring it at every call site. This is the full
+ * scale in the doc — nothing here invents a size that isn't in it.
+ */
+@layer components {
+  /* Addition, see DESIGN.md "Typography (Inter)" — hero headline only,
+     at most once per page. */
+  .text-display {
+    font-size: 36px;
+    line-height: 42px;
+    font-weight: 700;
+  }
+  .text-headline-md {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 700;
+  }
+  .text-title-sm {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+  }
+  .text-body-md {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+  }
+  .text-label-caps {
+    font-size: 10px;
+    line-height: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}

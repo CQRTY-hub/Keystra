@@ -10,14 +10,17 @@ import type { EmailMessage, EmailProvider, EmailSendResult } from "./types";
 export class MockEmailProvider implements EmailProvider {
   async send(message: EmailMessage): Promise<EmailSendResult> {
     await logEvent({
-      orderId: message.orderId,
+      orderId: message.template === "admin_alert" ? undefined : message.orderId,
       eventType: "email.send_attempted",
-      payload: {
-        to: message.to,
-        template: message.template,
-        includesKey: message.includesKey,
-        provider: "mock",
-      },
+      payload:
+        message.template === "admin_alert"
+          ? { to: message.to, template: message.template, subject: message.subject, provider: "mock" }
+          : {
+              to: message.to,
+              template: message.template,
+              includesKey: message.includesKey,
+              provider: "mock",
+            },
     });
 
     return { sent: true, providerMessageId: `mock_email_${Date.now()}` };

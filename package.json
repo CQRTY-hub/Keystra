@@ -13,7 +13,8 @@
     "prisma:generate": "dotenv -e .env.local -- prisma generate",
     "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "prisma:studio": "dotenv -e .env.local -- prisma studio",
-    "db:seed": "dotenv -e .env.local -- prisma db seed"
+    "db:seed": "dotenv -e .env.local -- prisma db seed",
+    "admin:setup": "dotenv -e .env.local -- tsx scripts/admin-setup.ts"
   },
   "keywords": [],
   "author": "",

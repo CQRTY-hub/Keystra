@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CheckoutForm } from "@/components/shop/CheckoutForm";
 import { KillSwitchNotice } from "@/components/shop/KillSwitchNotice";
+import { PageTitleBand } from "@/components/PageTitleBand";
 import { isCheckoutEnabled } from "@/lib/kill-switch";
 import { getMessages } from "@/i18n";
 
@@ -17,7 +18,7 @@ export default async function CheckoutPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">{t.checkout.title}</h1>
+      <PageTitleBand title={t.checkout.title} />
       <div className="mt-6">
         {checkoutEnabled ? <CheckoutForm /> : <KillSwitchNotice />}
       </div>
