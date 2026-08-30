@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Local secret-scanning safety net (see the "GitHub push protection" thread
+# in project history for why this exists): GitHub's own push protection
+# isn't available for a private, personal-account repo without a paid
+# plan, so this is the only real check standing between a mistyped .env
+# value and a public — well, private, but off-laptop — copy of it.
+#
+# Lives in .githooks/ (tracked by git) instead of .git/hooks/ (not
+# tracked) so it survives a fresh clone. It only activates once per
+# clone via:
+#   git config core.hooksPath .githooks
+# which setup-gitleaks.md documents. Runs `gitleaks protect`, which scans
+# only what's staged for this commit — fast, and it doesn't re-scan the
+# whole history on every commit (that already happened once, see
+# setup-gitleaks.md, and gitleaks' own push protection style tooling
+# would repeat it on every push if we wanted that instead).
+
+set -euo pipefail
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not on PATH — skipping the secret scan for this commit."
+  echo "  Install it (winget install Gitleaks.Gitleaks) and restart your shell to re-enable this check."
+  exit 0
+fi
+
+gitleaks protect --staged --redact -v
