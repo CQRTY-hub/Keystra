@@ -54,10 +54,20 @@ import type {
  * Verified against the live sandbox with a real score returned — see
  * assessRisk() below. `customerPaymentEmail` — the address Mollie
  * actually charged, as opposed to what the shopper typed at checkout —
- * isn't sent yet; Mollie itself is still a stub with no real payer email
- * to report. Wire it in once Phase 3.6 connects a real Mollie account —
- * a mismatch between the two is exactly the fraud signal this field
- * exists for.
+ * is now sent whenever Mollie's own payment response reports one (real
+ * Mollie integration landed 2026-09-01; see src/lib/payments/
+ * mollie-provider.ts and the webhook route). A mismatch between the two
+ * is exactly the fraud signal this field exists for.
+ *
+ * ## Where CodesWholesale is based (not an EU-VAT question, a
+ * purchase-VAT one)
+ * CodesWholesale invoices Keystra from the United Arab Emirates — outside
+ * the EU. Purchases from them are therefore never an intra-EU
+ * reverse-charge case; if this ever needs stating in bookkeeping or
+ * documentation, it's the extra-EU import-of-services rules that apply,
+ * not the intra-community ones. Noted here because it's easy to
+ * conflate with the shop's own *outgoing* EU distance-sales VAT
+ * treatment (src/lib/vat-thresholds.ts) — the two are unrelated.
  *
  * ## API version
  * The API is v3. v1 and v2 no longer exist.

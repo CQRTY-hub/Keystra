@@ -1,6 +1,7 @@
 import PDFDocument from "pdfkit";
 import contactEn from "@/i18n/legal/contact.en";
 import { formatPriceCents } from "@/lib/currency";
+import { countryDisplayName } from "@/lib/countries";
 
 export interface InvoiceLine {
   title: string;
@@ -80,7 +81,7 @@ export function generateInvoicePdf(input: InvoicePdfInput): Promise<Buffer> {
     doc.fontSize(10).fillColor("#555555");
     doc.text(input.customerName);
     doc.text(input.customerAddress);
-    doc.text(input.customerCountry);
+    doc.text(countryDisplayName(input.customerCountry));
     doc.text(input.customerEmail);
     doc.fillColor("#000000");
     doc.moveDown(1.5);

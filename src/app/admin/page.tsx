@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAdminSession } from "@/lib/admin/session";
 import { adminLogout } from "@/lib/actions/admin-auth-actions";
 import { getSupplierBalanceStatus } from "@/lib/admin/balance";
+import { getVatThresholdStatus } from "@/lib/vat-thresholds";
 import { formatPriceCents } from "@/lib/currency";
 import { Button } from "@/components/ui/Button";
 import { prisma } from "@/lib/prisma";
@@ -21,6 +22,7 @@ const NAV = [
   { href: "/admin/products", label: t.admin.dashboard.nav.products },
   { href: "/admin/kill-switch", label: t.admin.dashboard.nav.killSwitch },
   { href: "/admin/pricing", label: t.admin.dashboard.nav.pricing },
+  { href: "/admin/vat", label: t.admin.dashboard.nav.vat },
 ];
 
 export default async function AdminHomePage() {
@@ -30,6 +32,9 @@ export default async function AdminHomePage() {
 
   const credential = await prisma.adminCredential.findUnique({ where: { id: 1 } });
   const balance = await getSupplierBalanceStatus();
+  const vat = await getVatThresholdStatus();
+  const vatExceeded = vat.totalExceeded || vat.foreignEuExceeded;
+  const vatWarning = vat.totalWarning || vat.foreignEuWarning;
 
   return (
     <div className="w-full max-w-lg">
@@ -59,6 +64,22 @@ export default async function AdminHomePage() {
           )}
         </p>
       </div>
+
+      <Link
+        href="/admin/vat"
+        className="mt-4 flex items-center justify-between rounded-keystra border border-outline bg-container p-4 hover:border-secondary"
+      >
+        <span className="text-label-caps text-secondary">{t.admin.dashboard.vatSummary.title}</span>
+        <span
+          className={`text-title-sm ${vatExceeded || vatWarning ? "text-danger" : "text-on-surface"}`}
+        >
+          {vatExceeded
+            ? t.admin.dashboard.vatSummary.exceededBadge
+            : vatWarning
+              ? t.admin.dashboard.vatSummary.warningBadge
+              : t.admin.dashboard.vatSummary.okBadge}
+        </span>
+      </Link>
 
       <nav aria-label={t.admin.dashboard.title} className="mt-6 flex flex-col gap-2">
         {NAV.map((item) => (

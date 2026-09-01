@@ -7,6 +7,7 @@ import { getPaymentProvider } from "@/lib/payments";
 import { recordCheckoutConsent } from "@/lib/consent";
 import { logEvent } from "@/lib/event-log";
 import { getClientIp } from "@/lib/request-ip";
+import { findCountry } from "@/lib/countries";
 import { getMessages } from "@/i18n";
 
 const t = getMessages();
@@ -20,7 +21,14 @@ const checkoutSchema = z.object({
   // guard).
   customerName: z.string().trim().min(1),
   customerAddress: z.string().trim().min(1),
-  customerCountry: z.string().trim().min(1),
+  // Checked against the known-country list, not just "non-empty" — this
+  // value now feeds the VAT threshold split (src/lib/vat-thresholds.ts),
+  // so an unrecognised code arriving here (the dropdown only ever sends
+  // a real one; this guards against a direct API call) must be rejected
+  // rather than silently miscounted.
+  customerCountry: z.string().trim().min(1).refine((code) => Boolean(findCountry(code)), {
+    message: "Unknown country code.",
+  }),
   items: z
     .array(
       z.object({

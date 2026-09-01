@@ -25,7 +25,12 @@ export type CookieConsentValue = "accepted" | "rejected";
 // guarantee, ADR, VAT treatment, and more — see that file and
 // Design/juridische-vragen.md). Substantive wording change, not yet
 // reviewed by a lawyer — expect another bump once that review lands.
-export const TERMS_VERSION = "2026-08-30";
+//
+// Bumped 2026-09-01: "Prices and VAT" paragraph rewritten now that the
+// accountant confirmed the small-business exemption — no longer a
+// [TO BE CONFIRMED] marker, and now says explicitly that VAT is never
+// added after the fact. See src/lib/vat-thresholds.ts.
+export const TERMS_VERSION = "2026-09-01";
 export const WITHDRAWAL_WAIVER_VERSION = "2026-08-20";
 
 export const WITHDRAWAL_WAIVER_TEXT = withdrawalWaiverEn.text;

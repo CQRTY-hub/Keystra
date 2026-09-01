@@ -53,6 +53,7 @@ const en = {
     adminProducts: "Products",
     adminKillSwitch: "Kill switch",
     adminPricing: "Pricing rule",
+    adminVat: "VAT thresholds",
   },
 
   languageToggle: {
@@ -162,6 +163,7 @@ const en = {
     fullName: "Full name",
     address: "Address",
     country: "Country",
+    countryPlaceholder: "Select a country…",
     termsPrefix: "I agree to the ",
     termsLink: "terms and conditions",
     termsSuffix: ".",
@@ -355,6 +357,7 @@ const en = {
         products: "Products",
         killSwitch: "Kill switch",
         pricing: "Pricing",
+        vat: "VAT thresholds",
       },
       balance: {
         title: "Supplier balance",
@@ -364,6 +367,34 @@ const en = {
         ok: (amount: string) => `${amount} available.`,
         noThreshold: "No low-balance threshold set yet — see the kill switch page.",
       },
+      vatSummary: {
+        title: "VAT thresholds",
+        okBadge: "OK",
+        warningBadge: "Nearing threshold",
+        exceededBadge: "Threshold crossed",
+      },
+    },
+    vat: {
+      title: "VAT thresholds",
+      intro:
+        "Confirmed with the accountant: no VAT is charged as long as both figures below stay under their threshold. Based on invoiced revenue for the calendar year — see the export section for the underlying rule.",
+      yearLabel: (year: number) => `Calendar year ${year}`,
+      totalTitle: "Total annual turnover",
+      foreignEuTitle: "Foreign EU turnover (excl. Belgium)",
+      ofThreshold: (amount: string, threshold: string) => `${amount} of ${threshold}`,
+      statusOk: "OK",
+      statusWarning: "Nearing the threshold (80%+)",
+      statusExceeded: "Threshold crossed — this needs attention",
+      breakdownTitle: "Breakdown",
+      belgium: "Belgium",
+      otherEu: "Other EU",
+      nonEu: "Outside the EU",
+      exportTitle: "Quarterly export per country",
+      exportHint:
+        "The exact column layout still needs to come from the accountant — this is a plain, easy-to-adjust CSV in the meantime.",
+      exportYearLabel: "Year",
+      exportQuarterLabel: "Quarter",
+      exportButton: "Download CSV",
     },
     orders: {
       title: "Orders",

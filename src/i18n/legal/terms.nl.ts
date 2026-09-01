@@ -25,11 +25,14 @@ import { LEGAL_REVIEW_NOTICE_NL } from "@/i18n/legal/legal-review-notice.nl";
  * "Informatieverplichtingen in het kader van e-commerce" guidelines) —
  * legal form, digital-content characteristics, payment method, language
  * of this contract, order archiving, the statutory conformity guarantee,
- * ADR/complaints, and VAT treatment are all new paragraphs below. Three
- * of those (trader response time, ADR, VAT) carry a visible
- * `[TE BEVESTIGEN DOOR JURIST: ...]` marker — see
- * Design/juridische-vragen.md for the full list of open questions this
- * maps to, with the guideline text and current practice side by side.
+ * ADR/complaints, and VAT treatment are all new paragraphs below. Twee
+ * daarvan (reactietermijn, ADR) dragen nog een zichtbare
+ * `[TE BEVESTIGEN DOOR JURIST: ...]`-markering — zie
+ * Design/juridische-vragen.md voor de volledige lijst open vragen, met
+ * de richtlijntekst en de huidige praktijk naast elkaar. (Btw was een
+ * derde zo'n markering; opgelost op 2026-09-01 — de boekhouder heeft de
+ * vrijstelling bevestigd, zie vat-thresholds.ts voor de drempels die dat
+ * zo houden.)
  */
 const termsNl = {
   title: "Algemene voorwaarden",
@@ -62,7 +65,7 @@ const termsNl = {
 
     "Eén sleutel per bestelling, niet overdraagbaar. Per bestelling lever je één sleutel af. Sleutels zijn voor eigen gebruik bedoeld; doorverkoop is niet toegestaan.",
 
-    "Prijzen en btw. Alle vermelde prijzen zijn de prijzen die je effectief betaalt — er komt niets bij aan het einde van de bestelling. Keystra valt op dit moment onder de vrijstellingsregeling kleine ondernemingen (art. 56bis Btw-Wetboek): we rekenen geen btw aan over onze verkopen. [TE BEVESTIGEN DOOR JURIST/BOEKHOUDER: deze regeling, en de manier waarop dat hier vermeld staat, liggen nog ter bevestiging bij onze boekhouder. Deze tekst gaat ervan uit dat de vrijstelling van toepassing blijft en zo correct vermeld mag worden.]",
+    "Prijzen en btw. Alle vermelde prijzen zijn de prijzen die je effectief betaalt — er komt niets bij aan het einde van de bestelling, en er wordt geen btw aangerekend. Keystra past de vrijstellingsregeling kleine ondernemingen toe (art. 56bis Btw-Wetboek), bevestigd door onze boekhouder, zolang onze omzet onder de toepasselijke Belgische en Europese drempels blijft. Mocht dat ooit veranderen, dan zie je dat terug op deze pagina en in de prijs vóór je bestelt — nooit iets dat achteraf wordt toegevoegd.",
 
     "Belgisch recht en bevoegde rechtbank. Op deze overeenkomst is Belgisch recht van toepassing. Dat neemt niet weg dat je als consument de bescherming behoudt van de dwingende bepalingen van het recht van je eigen woonland, en dat je in de gevallen die de wet toelaat ook daar een procedure kan starten. Geschillen die we niet in onderling overleg oplossen, leggen we voor aan de bevoegde Belgische rechtbank, zonder afbreuk te doen aan dat recht.",
 

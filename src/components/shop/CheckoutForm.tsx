@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/lib/cart-context";
 import { formatPriceCents } from "@/lib/currency";
+import { COUNTRIES } from "@/lib/countries";
 import { WITHDRAWAL_WAIVER_TEXT } from "@/lib/consent-text";
 import { getMessages } from "@/i18n";
 
@@ -160,15 +162,23 @@ export function CheckoutForm() {
           onChange={(e) => setCustomerAddress(e.target.value)}
           autoComplete="street-address"
         />
-        <Input
+        <Select
           id="customer-country"
           label={t.checkout.country}
-          type="text"
           required
           value={customerCountry}
           onChange={(e) => setCustomerCountry(e.target.value)}
-          autoComplete="country-name"
-        />
+          autoComplete="country"
+        >
+          <option value="" disabled>
+            {t.checkout.countryPlaceholder}
+          </option>
+          {COUNTRIES.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.name}
+            </option>
+          ))}
+        </Select>
       </div>
 
       {/* PLAN.md, "Mobile is the primary device": 44px minimum tap target,

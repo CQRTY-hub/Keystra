@@ -16,10 +16,13 @@ import { LEGAL_REVIEW_NOTICE_EN } from "@/i18n/legal/legal-review-notice.en";
  * complete of the two). Also folds in every other actionable finding
  * from that audit: the statutory conformity guarantee, digital-content
  * characteristics, payment method, contract language, order archiving,
- * ADR/complaints, and VAT treatment. Three paragraphs carry a visible
- * `[TO BE CONFIRMED BY LAWYER: ...]` marker for a judgment call made
- * without legal sign-off — see Design/juridische-vragen.md for the full
- * list, with the guideline text and current practice side by side.
+ * ADR/complaints, and VAT treatment. Two paragraphs still carry a
+ * visible `[TO BE CONFIRMED BY LAWYER: ...]` marker for a judgment call
+ * made without legal sign-off — see Design/juridische-vragen.md for the
+ * full list, with the guideline text and current practice side by side.
+ * (VAT treatment was a third such marker; resolved 2026-09-01 — the
+ * accountant confirmed the exemption applies, see vat-thresholds.ts for
+ * the thresholds that keep it that way.)
  */
 const termsEn = {
   paragraphs: [
@@ -51,7 +54,7 @@ const termsEn = {
 
     "One key per order, non-transferable. Each order delivers one key. Keys are for personal use; resale is not permitted.",
 
-    "Prices and VAT. All prices shown are the prices you actually pay — nothing is added at the end of checkout. Keystra currently falls under the small-business VAT exemption scheme (art. 56bis of the Belgian VAT Code): we don't charge VAT on our sales. [TO BE CONFIRMED BY LAWYER / ACCOUNTANT: this scheme, and how it's stated here, are still pending confirmation from our accountant. This text assumes the exemption keeps applying and may correctly be stated this way.]",
+    "Prices and VAT. All prices shown are the prices you actually pay — nothing is added at the end of checkout, and no VAT is charged. Keystra applies the small-business VAT exemption scheme (art. 56bis of the Belgian VAT Code), confirmed with our accountant, for as long as our turnover stays under the applicable Belgian and EU thresholds. Should that ever change, this page — and the price you see before ordering — will reflect it; nothing about VAT is ever added after the fact.",
 
     "Belgian law and competent court. This agreement is governed by Belgian law. That doesn't take away the protection you retain, as a consumer, under the mandatory provisions of the law of your own country of residence, or your right to bring proceedings there in the cases the law allows. Disputes we can't resolve directly are brought before the competent Belgian court, without prejudice to that right.",
 
