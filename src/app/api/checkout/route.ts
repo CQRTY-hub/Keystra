@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isCheckoutEnabled } from "@/lib/kill-switch";
 import { getFulfillmentProvider } from "@/lib/fulfillment";
-import { createPayment } from "@/lib/payments/mollie-stub";
+import { getPaymentProvider } from "@/lib/payments";
 import { recordCheckoutConsent } from "@/lib/consent";
 import { logEvent } from "@/lib/event-log";
 import { getClientIp } from "@/lib/request-ip";
@@ -13,6 +13,14 @@ const t = getMessages();
 
 const checkoutSchema = z.object({
   email: z.string().email(),
+  // Billing details, for the invoice only (src/lib/invoicing) — never
+  // used for delivery, since everything here is digital. Required for
+  // every order placed from here on; existing orders that predate this
+  // field just don't get an invoice (see issueInvoiceForOrder's own
+  // guard).
+  customerName: z.string().trim().min(1),
+  customerAddress: z.string().trim().min(1),
+  customerCountry: z.string().trim().min(1),
   items: z
     .array(
       z.object({
@@ -50,6 +58,9 @@ export async function POST(req: NextRequest) {
   }
 
   const { items, termsAccepted, withdrawalWaiverAccepted } = parsed.data;
+  const customerName = parsed.data.customerName.trim();
+  const customerAddress = parsed.data.customerAddress.trim();
+  const customerCountry = parsed.data.customerCountry.trim();
   // Normalized once, here, so every downstream use (the stored order,
   // the confirmation/held/awaiting-code emails, order lookup later) is
   // consistent regardless of how the shopper capitalized it. Order
@@ -122,6 +133,9 @@ export async function POST(req: NextRequest) {
   const order = await prisma.order.create({
     data: {
       customerEmail: email,
+      customerName,
+      customerAddress,
+      customerCountry,
       totalCents,
       // Captured now, not reconstructable later — see the schema
       // comment on Order.customerIpAddress. This is what the payment
@@ -144,13 +158,27 @@ export async function POST(req: NextRequest) {
     withdrawalWaiverAccepted,
   });
 
-  const payment = await createPayment({
+  const payment = await getPaymentProvider().createPayment({
     orderId: order.id,
     amountCents: totalCents,
     currency: "EUR",
     description: t.api.checkout.orderDescription(order.id),
+    customerEmail: email,
     redirectUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/order/confirmation/${order.id}`,
-    webhookUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/mollie`,
+    // Only reached if the shopper explicitly cancels on Mollie's hosted
+    // payment page — a declined card or an abandoned/expired attempt
+    // still goes to redirectUrl above, per Mollie's own redirect rules
+    // (see mollie-provider.ts's header comment). The confirmation page
+    // already handles a still-`pending` order gracefully either way.
+    cancelUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/payment-failed?orderId=${order.id}`,
+    // MOLLIE_WEBHOOK_URL_OVERRIDE: local-dev-only escape hatch. Mollie
+    // rejects payment creation outright if webhookUrl isn't reachable
+    // from Mollie's own servers (confirmed 2026-09-01 testing against
+    // the real sandbox: a 422 "unreachable from Mollie's point of view"
+    // on localhost) — and localhost never is. Once deployed (Task 3),
+    // NEXT_PUBLIC_SITE_URL is itself a real public URL and this env var
+    // should simply not be set; this line is then a no-op.
+    webhookUrl: `${process.env.MOLLIE_WEBHOOK_URL_OVERRIDE ?? process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/mollie`,
   });
 
   await prisma.order.update({

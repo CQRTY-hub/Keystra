@@ -37,6 +37,17 @@ export type EmailMessage =
        * database, and only at send time.
        */
       includesKey: boolean;
+      /**
+       * Whether this send should attach the order's invoice PDF — same
+       * boolean-flag reasoning as includesKey, and the same "resolved at
+       * send time, not here" split: the PDF itself already exists by
+       * this point (src/lib/invoicing, issued at payment confirmation),
+       * but attaching bytes to an email is the real provider's job
+       * (Phase 3.6, not built yet — MockEmailProvider only logs this
+       * flag). False whenever issueInvoiceForOrder() skipped issuing one
+       * (e.g. an order placed before checkout captured billing details).
+       */
+      includesInvoice: boolean;
     }
   | {
       to: string;

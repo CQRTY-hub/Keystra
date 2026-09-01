@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPriceCents } from "@/lib/currency";
 import { CopyButton } from "@/components/shop/CopyButton";
+import { ClearCartOnComplete } from "@/components/shop/ClearCartOnComplete";
 import { PageTitleBand } from "@/components/PageTitleBand";
 import { getMessages } from "@/i18n";
 
@@ -29,10 +31,51 @@ export default async function OrderConfirmationPage({
       items: {
         include: { product: true, deliveredKeys: true },
       },
+      invoice: true,
     },
   });
 
   if (!order) notFound();
+
+  // A `pending` order isn't necessarily still being processed — Mollie
+  // redirects here for a declined card or an abandoned/expired attempt
+  // too (only an explicit cancel-on-Mollie's-page goes to
+  // /checkout/payment-failed instead — see the checkout route's
+  // cancelUrl). The webhook still logs those outcomes even though it
+  // deliberately leaves Order.status at `pending` (see that route's own
+  // comment), so this checks for that instead of showing "we're
+  // processing your order" forever for a payment that will never
+  // complete.
+  const paymentFailedEvent =
+    order.status === "pending"
+      ? await prisma.eventLog.findFirst({
+          where: {
+            orderId: order.id,
+            eventType: { in: ["payment.failed", "payment.expired", "payment.canceled"] },
+          },
+          orderBy: { createdAt: "desc" },
+        })
+      : null;
+
+  if (paymentFailedEvent) {
+    return (
+      <div>
+        <PageTitleBand title={t.paymentFailed.title} />
+        <p className="text-body-md mt-4 text-secondary">{t.paymentFailed.body}</p>
+        <div className="mt-6 flex gap-4">
+          <Link
+            href="/checkout"
+            className="text-title-sm inline-flex items-center justify-center rounded-keystra border border-secondary px-4 py-2 text-secondary hover:bg-container"
+          >
+            {t.paymentFailed.retry}
+          </Link>
+          <Link href="/cart" className="flex items-center text-secondary underline hover:text-primary">
+            {t.paymentFailed.backToCart}
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -46,6 +89,15 @@ export default async function OrderConfirmationPage({
       <p className="text-body-md mt-1 text-secondary">
         {t.confirmation.statusLabel(order.status)}
       </p>
+
+      {/* Cart cleared from `paid` onward, not just `completed`: any of
+          these three statuses means the payment already succeeded, so
+          leaving the old cart in place risks the shopper re-ordering
+          (and paying for) the same item a second time while this one is
+          still being sorted out. */}
+      {(order.status === "held" ||
+        order.status === "awaiting_code" ||
+        order.status === "completed") && <ClearCartOnComplete />}
 
       {order.status === "held" && (
         <p className="text-body-md mt-4 rounded-keystra border border-outline bg-container p-4 text-on-surface">
@@ -98,6 +150,18 @@ export default async function OrderConfirmationPage({
               </li>
             ))}
           </ul>
+          {order.invoice && (
+            <p className="mt-4">
+              <a
+                href={`/api/invoices/${order.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-secondary underline hover:text-primary"
+              >
+                {t.confirmation.downloadInvoice}
+              </a>
+            </p>
+          )}
         </div>
       )}
 

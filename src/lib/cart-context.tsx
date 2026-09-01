@@ -33,6 +33,15 @@ interface CartContextValue {
   totalCents: number;
   /** Sum of every item's quantity — what the header's cart badge shows. */
   itemCount: number;
+  /**
+   * False until the one-time localStorage read below has happened.
+   * Exists for callers that need to act on the cart on mount (e.g.
+   * ClearCartOnComplete) — clearing before this is true is a no-op that
+   * then gets silently undone the moment hydration's own setItems(...)
+   * from localStorage fires (found 2026-09-01: a real payment's cart
+   * wasn't actually clearing, for exactly this race).
+   */
+  hydrated: boolean;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -98,7 +107,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, setQuantity, clear, totalCents, itemCount }}
+      value={{ items, addItem, removeItem, setQuantity, clear, totalCents, itemCount, hydrated }}
     >
       {children}
     </CartContext.Provider>

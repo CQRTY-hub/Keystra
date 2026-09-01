@@ -157,6 +157,11 @@ const en = {
     title: "Checkout",
     orderSummaryTitle: "What you're ordering",
     email: "Email address",
+    billingTitle: "Billing details",
+    billingHint: "Used only for your invoice — never for delivery, which is always electronic.",
+    fullName: "Full name",
+    address: "Address",
+    country: "Country",
     termsPrefix: "I agree to the ",
     termsLink: "terms and conditions",
     termsSuffix: ".",
@@ -209,6 +214,7 @@ const en = {
     awaitingCodeBody: (email: string) =>
       `Your payment is confirmed and your key is reserved. It's not available from the supplier just yet — we'll send it to ${email} as soon as it arrives.`,
     completedEmailedTo: (email: string) => `We've also emailed your key to ${email}.`,
+    downloadInvoice: "Download invoice (PDF)",
     processing:
       "We're processing your order. This page will show your key as soon as it's ready.",
     keyImageAlt: (title: string) => `Key for ${title}`,
@@ -380,6 +386,9 @@ const en = {
       riskScore: "Risk score",
       riskThreshold: (threshold: number) => `threshold ${threshold}`,
       riskCheckFailed: "Risk check failed",
+      paymentEmailLabel: "Email Mollie charged",
+      paymentEmailMismatch: (email: string) => `${email} — different from order email`,
+      viewInvoice: (number: number) => `View invoice (#${String(number).padStart(6, "0")})`,
       holdReason: "Hold reason",
       holdReasonText: (reason: string) =>
         reason === "high_risk_score"

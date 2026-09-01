@@ -132,6 +132,25 @@ model Order {
   customerIpAddress String?
   customerUserAgent String?
 
+  // The email Mollie actually charged, as reported by the *paid* payment
+  // itself — separate from customerEmail (what the shopper typed at
+  // checkout). Set once, from the webhook route, only on a successful
+  // payment; null whenever the payment method doesn't report one (most
+  // of them — see src/lib/payments/mollie-provider.ts). A mismatch with
+  // customerEmail is CodesWholesale's strongest fraud signal (PLAN.md,
+  // Phase 3.6) and is sent to /v3/security as customerPaymentEmail.
+  customerPaymentEmail String?
+
+  // Captured at checkout (src/app/api/checkout/route.ts) solely to put a
+  // real customer identity on the invoice (src/lib/invoicing) — never
+  // used for delivery (everything here is digital) and never shown
+  // anywhere else in the app. Nullable because orders placed before this
+  // field existed don't have it; every order placed from here on
+  // requires all three (see the checkout route's zod schema).
+  customerName    String?
+  customerAddress String?
+  customerCountry String?
+
   // Withdrawal-right waiver (PLAN.md Phase 1 point 6 / Appendix item 1).
   // A dedicated checkbox, separate from the terms checkbox, unticked by
   // default. Both the timestamp and the exact wording version shown must
@@ -149,9 +168,42 @@ model Order {
 
   items           OrderItem[]
   eventLogs       EventLog[]
+  invoice         Invoice?
 
   @@index([status])
   @@index([customerEmail])
+}
+
+// One invoice per order, at most — see src/lib/invoicing/index.ts's
+// issueInvoiceForOrder() for the only place that creates one. Numbered
+// from InvoiceCounter (a single-row, transaction-guarded sequence) the
+// moment the order's payment is confirmed (src/app/api/webhooks/mollie,
+// PLAN.md Phase 3.6: "assigned at payment confirmation — not at key
+// delivery, since delivery can fail. A gap in the sequence is a
+// bookkeeping problem; never delete an invoice"). The PDF itself is
+// generated at that same moment and stored as-is; once created, a row
+// here is never updated or regenerated — a correction is a future credit
+// note (not built yet), never an edit.
+model Invoice {
+  id       String   @id @default(uuid())
+  number   Int      @unique
+  orderId  String   @unique
+  order    Order    @relation(fields: [orderId], references: [id])
+  issuedAt DateTime @default(now())
+  pdf      Bytes
+
+  @@index([number])
+}
+
+// Deliberately a single row (id always 1), read-and-incremented inside a
+// transaction by nextInvoiceNumber() (src/lib/invoicing/invoice-number.ts)
+// — the only gap-free way to hand out sequential numbers under concurrent
+// webhook calls without relying on Invoice.number's own auto-increment
+// (which Postgres does not guarantee gap-free under a rolled-back
+// transaction).
+model InvoiceCounter {
+  id          Int @id @default(1)
+  nextNumber  Int @default(1)
 }
 
 model OrderItem {

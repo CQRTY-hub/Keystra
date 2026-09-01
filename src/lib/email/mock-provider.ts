@@ -19,6 +19,7 @@ export class MockEmailProvider implements EmailProvider {
               to: message.to,
               template: message.template,
               includesKey: message.includesKey,
+              includesInvoice: message.includesInvoice,
               provider: "mock",
             },
     });

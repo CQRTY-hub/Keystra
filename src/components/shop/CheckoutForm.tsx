@@ -23,13 +23,25 @@ export function CheckoutForm() {
   const t = getMessages();
 
   const [email, setEmail] = useState("");
+  // Billing details only — see t.checkout.billingHint below. Kept
+  // separate from `email` (used for both delivery and login-free order
+  // lookup) since they serve entirely different purposes.
+  const [customerName, setCustomerName] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerCountry, setCustomerCountry] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [waiverAccepted, setWaiverAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit =
-    items.length > 0 && email.length > 0 && termsAccepted && waiverAccepted;
+    items.length > 0 &&
+    email.length > 0 &&
+    customerName.length > 0 &&
+    customerAddress.length > 0 &&
+    customerCountry.length > 0 &&
+    termsAccepted &&
+    waiverAccepted;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,6 +56,9 @@ export function CheckoutForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
+          customerName,
+          customerAddress,
+          customerCountry,
           items: items.map((i) => ({
             productId: i.productId,
             quantity: i.quantity,
@@ -119,6 +134,42 @@ export function CheckoutForm() {
         onChange={(e) => setEmail(e.target.value)}
         autoComplete="email"
       />
+
+      {/* Billing details — invoice only, per PLAN.md Phase 3.6 and the
+          storefront owner's own instruction (2026-08-30): a compliant
+          Belgian invoice needs a real customer identity, not just an
+          email address. Never used for delivery. */}
+      <div className="flex flex-col gap-3">
+        <h2 className="text-title-sm text-on-surface">{t.checkout.billingTitle}</h2>
+        <p className="text-body-md text-secondary">{t.checkout.billingHint}</p>
+        <Input
+          id="customer-name"
+          label={t.checkout.fullName}
+          type="text"
+          required
+          value={customerName}
+          onChange={(e) => setCustomerName(e.target.value)}
+          autoComplete="name"
+        />
+        <Input
+          id="customer-address"
+          label={t.checkout.address}
+          type="text"
+          required
+          value={customerAddress}
+          onChange={(e) => setCustomerAddress(e.target.value)}
+          autoComplete="street-address"
+        />
+        <Input
+          id="customer-country"
+          label={t.checkout.country}
+          type="text"
+          required
+          value={customerCountry}
+          onChange={(e) => setCustomerCountry(e.target.value)}
+          autoComplete="country-name"
+        />
+      </div>
 
       {/* PLAN.md, "Mobile is the primary device": 44px minimum tap target,
           especially these two — a consent checkbox that's hard to hit is

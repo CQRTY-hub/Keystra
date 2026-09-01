@@ -49,6 +49,7 @@ export async function getOrderWithEventLog(orderId: string) {
     include: {
       items: { include: { product: true, deliveredKeys: true } },
       eventLogs: { orderBy: { createdAt: "desc" } },
+      invoice: true,
     },
   });
 }

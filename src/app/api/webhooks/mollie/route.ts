@@ -9,16 +9,19 @@ import {
   checkFulfilmentCircuitBreakers,
   checkLowBalanceCircuitBreaker,
 } from "@/lib/admin/circuit-breakers";
-import { verifyWebhook } from "@/lib/payments/mollie-stub";
+import { getPaymentProvider, type PaymentStatus } from "@/lib/payments";
 import { getFulfillmentProvider } from "@/lib/fulfillment";
 import { getEmailProvider } from "@/lib/email";
+import { issueInvoiceForOrder } from "@/lib/invoicing";
 
 /**
  * Mollie webhooks arrive as `application/x-www-form-urlencoded` with a
- * single `id` field — the payment ID. You then fetch the payment from
- * Mollie's API to find its real status; the body itself is never trusted
- * on its own. Phase 1's `verifyWebhook` is a stub that always says valid,
- * since there's no real Mollie account yet — Phase 3 replaces it.
+ * single `id` field — the payment ID. This fetches the payment from
+ * Mollie's own API (getPaymentProvider().getPayment(), which either the
+ * mock or real Mollie implements — see src/lib/payments) to find its
+ * real status; the webhook body itself is never trusted on its own, and
+ * Mollie doesn't sign it (see mollie-provider.ts's header comment for
+ * why re-fetching is the standard approach, not a workaround).
  *
  * Idempotency (PLAN.md non-negotiable #4): the same notification arriving
  * twice must never deliver two keys. See src/lib/webhooks.ts for the pure
@@ -38,8 +41,20 @@ export async function POST(req: NextRequest) {
     payload: { molliePaymentId },
   });
 
-  const { valid } = await verifyWebhook(molliePaymentId);
-  if (!valid) {
+  // Never trust the webhook body's own claimed status (there isn't one —
+  // Mollie only ever sends the id) — re-fetch from Mollie's API with our
+  // own key. A fetch failure here (including "no such payment") means
+  // this webhook doesn't check out against Mollie's own records, which is
+  // a 400, not something to guess about.
+  let payment: { status: PaymentStatus; payerEmail?: string };
+  try {
+    payment = await getPaymentProvider().getPayment(molliePaymentId);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await logEvent({
+      eventType: "payment.webhook_invalid",
+      payload: { molliePaymentId, message },
+    });
     return NextResponse.json({ message: "Invalid webhook" }, { status: 400 });
   }
 
@@ -67,16 +82,63 @@ export async function POST(req: NextRequest) {
   // order was found.
   const paidOrder = order!;
 
+  // decideWebhookAction only answers "is this order still pending" — it
+  // has no opinion on what Mollie's status actually is. That branch lives
+  // here: Mollie's webhook fires for paid, authorized, failed, expired,
+  // and canceled (see mollie-provider.ts) — only "paid" means proceed.
+  // Everything else leaves the order `pending`, on purpose: nothing was
+  // charged, the shopper's cart is still intact (CheckoutForm.tsx never
+  // clears it until a confirmed payment), and "Try again" on the
+  // payment-failed / confirmation page re-enters checkout cleanly. See
+  // that page's own comment for the full reasoning — this used to be
+  // true only for the mock's cancel button; it's now true for a real
+  // declined card or an abandoned/expired attempt too.
+  if (payment.status !== "paid") {
+    await logEvent({
+      orderId: paidOrder.id,
+      eventType: nonPaidEventType(payment.status),
+      payload: { molliePaymentId, status: payment.status },
+    });
+    return NextResponse.json({ status: payment.status });
+  }
+
   assertTransition(paidOrder.status, OrderStatus.paid);
   await prisma.order.update({
     where: { id: paidOrder.id },
-    data: { status: OrderStatus.paid },
+    data: {
+      status: OrderStatus.paid,
+      // Only ever set from a *paid* payment's own reported detail —
+      // never from what the shopper typed at checkout (that's
+      // customerEmail, captured separately at order creation). Absent
+      // for most methods; see mollie-provider.ts's extractPayerEmail.
+      customerPaymentEmail: payment.payerEmail,
+    },
   });
   await logEvent({
     orderId: paidOrder.id,
     eventType: "payment.confirmed",
-    payload: { molliePaymentId },
+    payload: { molliePaymentId, payerEmail: payment.payerEmail },
   });
+
+  // Number + PDF assigned now, at payment confirmation — see
+  // src/lib/invoicing/index.ts's own comment for why this can't wait
+  // until fulfilment succeeds. Wrapped, deliberately: the order is
+  // already `paid` at this point, so an uncaught throw here would 500
+  // this whole request — and a Mollie retry of the same webhook would
+  // then find the order no longer `pending` and be ignored as a
+  // duplicate (decideWebhookAction), silently skipping fulfilment
+  // forever. An invoicing failure must never cost the customer their
+  // key; it only gets logged.
+  try {
+    await issueInvoiceForOrder(paidOrder.id);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await logEvent({
+      orderId: paidOrder.id,
+      eventType: "invoice.failed",
+      payload: { message },
+    });
+  }
 
   const fulfillment = getFulfillmentProvider();
 
@@ -96,9 +158,11 @@ export async function POST(req: NextRequest) {
       customerEmail: paidOrder.customerEmail,
       customerIpAddress: paidOrder.customerIpAddress ?? "unknown",
       customerUserAgent: paidOrder.customerUserAgent ?? undefined,
-      // customerPaymentEmail: not sent yet — Mollie is still a stub with
-      // no real payer identity to report. See RiskAssessmentInput's own
-      // comment in src/lib/fulfillment/types.ts.
+      // The address Mollie actually charged, when it reported one (see
+      // mollie-provider.ts) — a mismatch with customerEmail above is
+      // exactly the fraud signal this field exists for (storefront
+      // owner's own framing, 2026-08-26).
+      customerPaymentEmail: payment.payerEmail,
     });
     riskOutcome = {
       ok: true,
@@ -112,6 +176,16 @@ export async function POST(req: NextRequest) {
         riskScore: risk.riskScore,
         suggestedHoldThreshold: risk.suggestedHoldThreshold,
         held: risk.riskScore >= risk.suggestedHoldThreshold,
+        // Surfaced for the admin order page (PLAN.md: "the strongest
+        // fraud signal we have") — a mismatch here doesn't affect
+        // riskScore itself (that's entirely CodesWholesale's call from
+        // the fields it was sent), it's shown so a human reviewing a
+        // held order sees it at a glance instead of decoding raw JSON.
+        customerPaymentEmail: payment.payerEmail,
+        paymentEmailMismatch: Boolean(
+          payment.payerEmail &&
+            payment.payerEmail.toLowerCase() !== paidOrder.customerEmail.toLowerCase()
+        ),
       },
     });
   } catch (err) {
@@ -260,6 +334,11 @@ export async function POST(req: NextRequest) {
       template: "order_awaiting_code",
       orderId: paidOrder.id,
       includesKey: false,
+      // Not yet — the invoice already exists (issued above, at payment
+      // confirmation), but it goes out with the completion email, once
+      // there's actually a key alongside it. See issueInvoiceForOrder's
+      // own comment.
+      includesInvoice: false,
     });
 
     return NextResponse.json({ status: "awaiting_code" });
@@ -271,12 +350,19 @@ export async function POST(req: NextRequest) {
     data: { status: OrderStatus.completed },
   });
 
+  // "na bevestiging van betaling en ontvangen van de key" — this is that
+  // moment. The invoice itself was already generated at payment
+  // confirmation above; this only decides whether to flag it on the
+  // email that's actually going out now, alongside the key.
+  const invoice = await prisma.invoice.findUnique({ where: { orderId: paidOrder.id } });
+
   const email = getEmailProvider();
   await email.send({
     to: paidOrder.customerEmail,
     template: "order_confirmation",
     orderId: paidOrder.id,
     includesKey: true,
+    includesInvoice: invoice !== null,
   });
 
   return NextResponse.json({ status: "completed" });
@@ -288,5 +374,31 @@ async function tryJsonId(raw: string): Promise<string | null> {
     return typeof json?.id === "string" ? json.id : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * EventType (src/lib/event-log.ts) is a fixed literal union, deliberately
+ * not a free-form string — every write is a conscious, typed choice. This
+ * maps every non-"paid" status Mollie's webhook can report to one of
+ * those literals; "open"/"pending"/"unknown" aren't in Mollie's own list
+ * of statuses that trigger a webhook call at all (see mollie-provider.ts),
+ * so they fall through to the shared catch-all rather than each getting
+ * their own EventType that should never actually occur.
+ */
+function nonPaidEventType(
+  status: Exclude<PaymentStatus, "paid">
+): "payment.authorized" | "payment.failed" | "payment.expired" | "payment.canceled" | "payment.status_unhandled" {
+  switch (status) {
+    case "authorized":
+      return "payment.authorized";
+    case "failed":
+      return "payment.failed";
+    case "expired":
+      return "payment.expired";
+    case "canceled":
+      return "payment.canceled";
+    default:
+      return "payment.status_unhandled";
   }
 }

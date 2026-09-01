@@ -40,7 +40,14 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
   );
   const latestHoldEvent = order.eventLogs.find((e) => e.eventType === "order.held");
   const riskPayload = latestRiskEvent?.payload as
-    | { riskScore?: number; suggestedHoldThreshold?: number; held?: boolean; message?: string }
+    | {
+        riskScore?: number;
+        suggestedHoldThreshold?: number;
+        held?: boolean;
+        message?: string;
+        customerPaymentEmail?: string;
+        paymentEmailMismatch?: boolean;
+      }
     | undefined;
   const holdPayload = latestHoldEvent?.payload as { reason?: string } | undefined;
 
@@ -55,6 +62,19 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
         {order.customerEmail} — {formatPriceCents(order.totalCents)} —{" "}
         <span className={order.status === "held" ? "text-danger" : ""}>{order.status}</span>
       </p>
+
+      {order.invoice && (
+        <p className="mt-2">
+          <a
+            href={`/api/invoices/${order.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-body-md text-secondary underline hover:text-primary"
+          >
+            {t.admin.orders.viewInvoice(order.invoice.number)}
+          </a>
+        </p>
+      )}
 
       {(latestRiskEvent || latestHoldEvent) && (
         <section className="mt-6 rounded-keystra border border-outline bg-container p-4">
@@ -72,6 +92,14 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
               <div className="flex justify-between gap-4">
                 <dt className="text-secondary">{t.admin.orders.riskCheckFailed}</dt>
                 <dd className="text-danger">{riskPayload.message ?? "—"}</dd>
+              </div>
+            )}
+            {riskPayload?.paymentEmailMismatch && riskPayload.customerPaymentEmail && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-secondary">{t.admin.orders.paymentEmailLabel}</dt>
+                <dd className="text-danger">
+                  {t.admin.orders.paymentEmailMismatch(riskPayload.customerPaymentEmail)}
+                </dd>
               </div>
             )}
             {holdPayload?.reason && (
