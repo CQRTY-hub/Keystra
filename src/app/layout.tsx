@@ -118,7 +118,7 @@ export default async function RootLayout({
                 </div>
               </form>
 
-              <ul className="ml-auto flex shrink-0 items-center gap-3">
+              <ul className="ml-auto flex shrink-0 items-center gap-4 sm:gap-5">
                 <li>
                   <Link
                     href="/shop"

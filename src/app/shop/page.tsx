@@ -105,10 +105,12 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       {filtered.length === 0 ? (
         <p className="text-body-md mt-8 text-secondary">{t.shop.noResults}</p>
       ) : (
-        // Same compact ratio as the homepage's Trending Now grid — more
-        // products per row, smaller image, so mediocre supplier boxart
-        // has less room to stand out.
-        <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        // Same ratio as the homepage's Trending Now grid. One column below
+        // sm (640px) — two narrow cards side by side on a phone read as
+        // cramped and hard to tap accurately; a phone gets one full-width
+        // card instead, and screens with room for more still get a denser
+        // grid from sm upward.
+        <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

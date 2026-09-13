@@ -21,9 +21,9 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   const t = getMessages();
 
   return (
-    <li className="rounded-keystra border border-outline bg-container p-3 transition-transform hover:-translate-y-0.5">
+    <li className="rounded-keystra border border-outline bg-container p-4 transition-transform hover:-translate-y-0.5">
       <Link href={`/product/${product.id}`} className="block">
-        <div className="relative aspect-square overflow-hidden rounded-keystra border border-outline bg-container-low">
+        <div className="relative aspect-square overflow-hidden rounded-keystra border border-outline bg-container-lowest">
           <span className="text-label-caps absolute inset-0 flex items-center justify-center text-center text-secondary">
             {t.category[product.category]}
           </span>

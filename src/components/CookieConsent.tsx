@@ -53,11 +53,13 @@ export function CookieConsent() {
         <p className="text-body-md text-on-surface">{t.cookieConsent.body}</p>
         <div className="flex gap-2">
           {/* Neither choice is a buy action — both stay "secondary" so
-              rejecting reads as exactly as easy as accepting, not dimmer. */}
-          <Button variant="secondary" onClick={() => choose("rejected")}>
+              rejecting reads as exactly as easy as accepting, not dimmer.
+              flex-1 below sm: two equal, full-width, easy-to-tap buttons
+              side by side instead of two cramped small ones. */}
+          <Button variant="secondary" className="flex-1 sm:flex-none" onClick={() => choose("rejected")}>
             {t.cookieConsent.reject}
           </Button>
-          <Button variant="secondary" onClick={() => choose("accepted")}>
+          <Button variant="secondary" className="flex-1 sm:flex-none" onClick={() => choose("accepted")}>
             {t.cookieConsent.accept}
           </Button>
         </div>
